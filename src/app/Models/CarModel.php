@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
 class CarModel extends Model
 {
     use HasFactory;
@@ -40,4 +41,9 @@ class CarModel extends Model
     {
         return $this->hasMany(UserGarage::class, 'model_id', 'model_id');
     }
+     public function specs()
+    {
+        return $this->belongsToMany(ModelSpec::class, 'model_id', 'id');
+    }
 }
+
