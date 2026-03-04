@@ -2,35 +2,41 @@
 
 namespace Database\Factories;
 
-use App\Models\CarAdvert;
-use App\Models\CarModel;
-use App\Models\CarEngine;
 use App\Models\AppUser;
+use App\Models\CarAdvert;
+use App\Models\CarEngine;
+use App\Models\CarModel;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\CarAdvert>
+ */
 class CarAdvertFactory extends Factory
 {
     protected $model = CarAdvert::class;
 
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
     public function definition(): array
     {
-        $type = fake()->randomElement(['new', 'km0', 'used', 'renting', 'leasing', 'supcription']);
-        $km = $type === 'new' ? 0 : ($type === 'km0' ? fake()->numberBetween(10, 500) : fake()->numberBetween(5000, 200000));
-        
         return [
-            'ad_title' => fake()->sentence(6),
-            'ad_type' => $type,
-            'ad_details' => fake()->paragraph(5),
-            'price' => fake()->randomFloat(2, 5000, 80000),
-            'kilometers' => $km,
+            'ad_title' => fake()->sentence(4),
+            'ad_type' => fake()->randomElement(['new', 'km0', 'used', 'renting', 'leasing', 'supcription']),
+            'ad_details' => fake()->paragraph(),
+            'price' => fake()->randomFloat(2, 4500, 120000),
+            'kilometers' => fake()->numberBetween(0, 240000),
             'car_color' => fake()->randomElement(['blanco', 'negro', 'gris', 'plata', 'rojo', 'azul', 'verde', 'amarillo', 'naranja', 'otro']),
-            'year_manufacture' => fake()->numberBetween(2010, 2024),
+            'year_manufacture' => fake()->numberBetween(2000, (int) date('Y')),
             'region' => fake()->state(),
             'city' => fake()->city(),
-            'visible' => fake()->boolean(80), // 80% visibles
-            'model_id' => CarModel::inRandomOrder()->first()->model_id,
-            'engine_id' => CarEngine::inRandomOrder()->first()->engine_id,
-            'seller_id' => AppUser::inRandomOrder()->first()->user_id,
+            'visible' => fake()->boolean(85),
+            'publish_date' => fake()->dateTimeBetween('-1 year', 'now'),
+            'model_id' => CarModel::query()->inRandomOrder()->value('model_id') ?? CarModel::factory(),
+            'engine_id' => CarEngine::query()->inRandomOrder()->value('engine_id') ?? CarEngine::factory(),
+            'seller_id' => AppUser::query()->inRandomOrder()->value('user_id') ?? AppUser::factory(),
         ];
     }
 }
