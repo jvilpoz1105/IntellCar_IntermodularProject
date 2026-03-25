@@ -1,0 +1,760 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "IntellCar API",
+        "description": "API REST para la aplicación IntellCar - Plataforma de compraventa y comunidad de coches",
+        "contact": {
+            "email": "admin@intellcar.com"
+        },
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/auth/register": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Registrar nuevo usuario",
+                "operationId": "c7bb21a0d87049e161b8e4c9b0d909f2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_name",
+                                    "email_address",
+                                    "phone",
+                                    "user_password"
+                                ],
+                                "properties": {
+                                    "user_name": {
+                                        "type": "string",
+                                        "example": "Juan Pérez"
+                                    },
+                                    "email_address": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "juan@example.com"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+34600000000"
+                                    },
+                                    "user_password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "contact_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "contact@example.com"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "Calle Principal 123"
+                                    },
+                                    "paddock_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Usuario registrado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "user": {
+                                            "type": "object"
+                                        },
+                                        "token": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/api/auth/login": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Iniciar sesión",
+                "operationId": "dd51a484b7fa0f97c7680fdbde14cf5f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email_address",
+                                    "user_password"
+                                ],
+                                "properties": {
+                                    "email_address": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@intellcar.com"
+                                    },
+                                    "user_password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "user123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login exitoso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "user": {
+                                            "type": "object"
+                                        },
+                                        "token": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Credenciales incorrectas"
+                    }
+                }
+            }
+        },
+        "/api/auth/logout": {
+            "post": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Cerrar sesión",
+                "operationId": "df9bdc6c7a6d9f20b983526b2ec0f698",
+                "responses": {
+                    "200": {
+                        "description": "Sesión cerrada exitosamente"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/me": {
+            "get": {
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Obtener usuario autenticado",
+                "operationId": "b5de204f5e452ef51327c691aa99e77c",
+                "responses": {
+                    "200": {
+                        "description": "Información del usuario",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppUser"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/adverts": {
+            "get": {
+                "tags": [
+                    "Anuncios"
+                ],
+                "summary": "Obtener listado de anuncios",
+                "operationId": "c7d8b1b820c2cbd05e6e9e21b721e80e",
+                "parameters": [
+                    {
+                        "name": "visible",
+                        "in": "query",
+                        "description": "Filtrar por visibilidad (solo anuncios visibles)",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "ad_type",
+                        "in": "query",
+                        "description": "Filtrar por tipo de anuncio",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "new",
+                                "km0",
+                                "used",
+                                "renting",
+                                "leasing",
+                                "supcription"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "min_price",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "max_price",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Listado de anuncios",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CarAdvert"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Anuncios"
+                ],
+                "summary": "Crear un nuevo anuncio",
+                "operationId": "df80eb1fd39e2b76c4db494abe28b1cb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "ad_title",
+                                    "ad_type",
+                                    "price",
+                                    "model_id",
+                                    "engine_id",
+                                    "car_color",
+                                    "region",
+                                    "city"
+                                ],
+                                "properties": {
+                                    "ad_title": {
+                                        "type": "string"
+                                    },
+                                    "ad_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "new",
+                                            "km0",
+                                            "used",
+                                            "renting",
+                                            "leasing",
+                                            "supcription"
+                                        ]
+                                    },
+                                    "price": {
+                                        "type": "number"
+                                    },
+                                    "model_id": {
+                                        "type": "integer"
+                                    },
+                                    "engine_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Anuncio creado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/adverts/{id}": {
+            "get": {
+                "tags": [
+                    "Anuncios"
+                ],
+                "summary": "Obtener detalles de un anuncio",
+                "operationId": "e5e7b8d614adee2f90e0e5aa64b90f63",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalles del anuncio"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Anuncios"
+                ],
+                "summary": "Actualizar un anuncio",
+                "operationId": "6be380632ce0f8570b28f60361bf9d12",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Anuncio actualizado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Anuncios"
+                ],
+                "summary": "Eliminar un anuncio",
+                "operationId": "88e32919531e45e827787636191dda5b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Anuncio eliminado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/events": {
+            "get": {
+                "tags": [
+                    "Eventos"
+                ],
+                "summary": "Obtener listado de eventos/quedadas",
+                "operationId": "e529c81e6aaec82f49950a87ed881f57",
+                "responses": {
+                    "200": {
+                        "description": "Listado de eventos"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Eventos"
+                ],
+                "summary": "Crear un nuevo evento",
+                "operationId": "e958e1c6c275d5f9b7ebcd837903d0ef",
+                "responses": {
+                    "201": {
+                        "description": "Evento creado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/events/{id}": {
+            "get": {
+                "tags": [
+                    "Eventos"
+                ],
+                "summary": "Obtener detalles de un evento",
+                "operationId": "c0f602d773798994c228d99dbd63b842",
+                "responses": {
+                    "200": {
+                        "description": "Detalles del evento"
+                    }
+                }
+            }
+        },
+        "/api/events/{id}/join": {
+            "post": {
+                "tags": [
+                    "Eventos"
+                ],
+                "summary": "Unirse a un evento",
+                "operationId": "5e21c67158b8ec101710eb3fd34940aa",
+                "responses": {
+                    "200": {
+                        "description": "Te has unido al evento"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/events/{id}/leave": {
+            "delete": {
+                "tags": [
+                    "Eventos"
+                ],
+                "summary": "Salir de un evento",
+                "operationId": "1771666fc570015eed277ab66e729e4c",
+                "responses": {
+                    "200": {
+                        "description": "Has salido del evento"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/makes": {
+            "get": {
+                "tags": [
+                    "Marcas"
+                ],
+                "summary": "Obtener listado de marcas de coches",
+                "operationId": "7c4df47d577a536121941f589aff0ad8",
+                "responses": {
+                    "200": {
+                        "description": "Listado de marcas"
+                    }
+                }
+            }
+        },
+        "/api/makes/{id}": {
+            "get": {
+                "tags": [
+                    "Marcas"
+                ],
+                "summary": "Obtener detalles de una marca",
+                "operationId": "960d6cb4aabb7dd4fffeec01fb6c2d57",
+                "responses": {
+                    "200": {
+                        "description": "Detalles de la marca"
+                    }
+                }
+            }
+        },
+        "/api/paddocks": {
+            "get": {
+                "tags": [
+                    "Paddocks"
+                ],
+                "summary": "Obtener listado de paddocks/comunidades",
+                "operationId": "da1ce883ac31abbdf8ec70ee76d50f4d",
+                "responses": {
+                    "200": {
+                        "description": "Listado de paddocks"
+                    }
+                }
+            }
+        },
+        "/api/paddocks/{id}": {
+            "get": {
+                "tags": [
+                    "Paddocks"
+                ],
+                "summary": "Obtener detalles de un paddock",
+                "operationId": "ad0d70b239c3dafb114d48366af01c17",
+                "responses": {
+                    "200": {
+                        "description": "Detalles del paddock"
+                    }
+                }
+            }
+        },
+        "/api/posts": {
+            "get": {
+                "tags": [
+                    "Posts"
+                ],
+                "summary": "Obtener listado de posts",
+                "operationId": "3fda362e2e082b5357ac416e7767e435",
+                "responses": {
+                    "200": {
+                        "description": "Listado de posts"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Posts"
+                ],
+                "summary": "Crear un nuevo post",
+                "operationId": "dcb66200c3132996151884ac232cf439",
+                "responses": {
+                    "201": {
+                        "description": "Post creado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/posts/{id}": {
+            "get": {
+                "tags": [
+                    "Posts"
+                ],
+                "summary": "Obtener detalles de un post",
+                "operationId": "142b5adb0520cca80cedfe09d9298332",
+                "responses": {
+                    "200": {
+                        "description": "Detalles del post"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Posts"
+                ],
+                "summary": "Actualizar un post",
+                "operationId": "650f4bed0846d9350903d8a17c7b503a",
+                "responses": {
+                    "200": {
+                        "description": "Post actualizado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Posts"
+                ],
+                "summary": "Eliminar un post",
+                "operationId": "9d99f2e42af2f722a058a86245aa856f",
+                "responses": {
+                    "200": {
+                        "description": "Post eliminado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/posts/{id}/like": {
+            "post": {
+                "tags": [
+                    "Posts"
+                ],
+                "summary": "Dar like a un post",
+                "operationId": "7f75130b52b638869a4fb55c3f348998",
+                "responses": {
+                    "200": {
+                        "description": "Like añadido"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Posts"
+                ],
+                "summary": "Quitar like de un post",
+                "operationId": "fd2423920058da1899b2fdf641842242",
+                "responses": {
+                    "200": {
+                        "description": "Like eliminado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AppUser": {
+                "properties": {
+                    "user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "user_name": {
+                        "type": "string",
+                        "example": "Juan Perez"
+                    },
+                    "email_address": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "juan@example.com"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "example": "+34600000000"
+                    },
+                    "user_tag": {
+                        "type": "string",
+                        "example": "indv"
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
+            "CarAdvert": {
+                "properties": {
+                    "ad_id": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "ad_title": {
+                        "type": "string",
+                        "example": "BMW Serie 3 320d"
+                    },
+                    "ad_type": {
+                        "type": "string",
+                        "example": "used"
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 23990
+                    },
+                    "car_color": {
+                        "type": "string",
+                        "example": "gris"
+                    },
+                    "region": {
+                        "type": "string",
+                        "example": "Madrid"
+                    },
+                    "city": {
+                        "type": "string",
+                        "example": "Alcobendas"
+                    },
+                    "visible": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "sanctum": {
+                "type": "http",
+                "bearerFormat": "Token",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Autenticación",
+            "description": "Autenticación"
+        },
+        {
+            "name": "Anuncios",
+            "description": "Anuncios"
+        },
+        {
+            "name": "Eventos",
+            "description": "Eventos"
+        },
+        {
+            "name": "Marcas",
+            "description": "Marcas"
+        },
+        {
+            "name": "Paddocks",
+            "description": "Paddocks"
+        },
+        {
+            "name": "Posts",
+            "description": "Posts"
+        }
+    ]
+}

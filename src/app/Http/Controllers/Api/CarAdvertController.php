@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\CarAdvert;
 use Illuminate\Http\Request;
+use OpenApi\Annotations as OA;
 
 class CarAdvertController extends Controller
 {
