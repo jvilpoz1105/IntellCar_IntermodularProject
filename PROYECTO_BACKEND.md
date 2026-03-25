@@ -249,3 +249,48 @@ Proyecto educativo - Módulo de Desarrollo en Entorno Servidor
 ---
 
 **Desarrollado para el Proyecto Intermodular 2026** 🎓
+
+
+## IntellCar (src) - Setup rapido Laravel Breeze
+
+Este proyecto corre dentro de Docker con Apache y MySQL.
+
+### Requisitos
+
+- Docker y Docker Compose
+
+### Levantar contenedores
+
+```bash
+docker compose up -d
+```
+
+La app queda en:
+
+```
+http://localhost:8080
+```
+
+### Instalar Laravel Breeze (auth con interfaz)
+
+Ejecutar dentro del contenedor:
+
+```bash
+docker exec -it laravel12_app composer require laravel/breeze --dev
+docker exec -it laravel12_app php artisan breeze:install
+docker exec -it laravel12_app npm install
+docker exec -it laravel12_app npm run build
+```
+
+### Configurar APP_KEY y migraciones
+
+```bash
+docker exec -it laravel12_app php artisan key:generate
+docker exec -it laravel12_app php artisan config:clear
+docker exec -it laravel12_app php artisan migrate
+```
+
+### Verificar autenticacion
+
+- `http://localhost:8080/register`
+- `http://localhost:8080/login`
