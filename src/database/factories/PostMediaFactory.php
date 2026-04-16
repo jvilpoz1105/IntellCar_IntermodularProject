@@ -25,8 +25,8 @@ class PostMediaFactory extends Factory
         return [
             'post_id' => Post::query()->inRandomOrder()->value('post_id') ?? Post::factory(),
             'media_url' => $mediaType === 'image'
-                ? 'https://picsum.photos/seed/'.fake()->uuid().'/1280/720'
-                : 'https://example.com/videos/'.fake()->uuid().'.mp4',
+                ? 'https://fastly.picsum.photos/id/133/2742/1828.jpg'
+                : 'https://example.com/dummy-video.mp4',
             'media_type' => $mediaType,
         ];
     }

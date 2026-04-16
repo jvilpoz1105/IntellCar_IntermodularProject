@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\PostMedia;
+use App\Models\ModelSpec;
 use Illuminate\Database\Seeder;
 
-class PostMediaSeeder extends Seeder
+class ModelSpecSeeder extends Seeder
 {
     public function run(): void
     {
-        PostMedia::factory()->count(100)->create();
+        ModelSpec::factory()->count(50)->create();
     }
 }

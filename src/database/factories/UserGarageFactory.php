@@ -31,7 +31,7 @@ class UserGarageFactory extends Factory
             'car_nickname' => fake()->boolean(75) ? fake()->words(2, true) : null,
             'description' => fake()->boolean(80) ? fake()->paragraph() : null,
             'is_current_car' => fake()->boolean(65),
-            'photo_url' => fake()->boolean(85) ? 'https://picsum.photos/seed/'.fake()->uuid().'/1024/768' : null,
+            'photo_url' => fake()->boolean(85) ? 'https://fastly.picsum.photos/id/133/2742/1828.jpg' : null,
             'verified_owner' => fake()->boolean(60),
         ];
     }

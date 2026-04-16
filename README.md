@@ -35,3 +35,22 @@ Tu historial: Puedes añadir los coches que tienes actualmente y también los qu
 Personalización: Ponles un mote, sube su mejor foto y cuenta su historia. Es tu carta de presentación ante la comunidad: cuando alguien vea tu perfil, sabrá exactamente qué clase de petrolhead eres.
 
 En resumen: IntellCar es el lugar donde entras para buscar un coche, pero te quedas por la gente, las historias y las rutas. ¡Es el vértice donde todo lo que tiene motor cobra vida!
+
+---
+
+## 🔑 Credenciales de Acceso (Entorno de Desarrollo)
+
+Para facilitar las pruebas de la API y el inicio de sesión, se han configurado los siguientes usuarios en el Seeder:
+
+### Usuarios Principales
+| Perfil | Email | Contraseña |
+| :--- | :--- | :--- |
+| **Administrador** | `admin@intellcar.com` | `admin123` |
+| **Profesional** | `carlos@ferrari.com` | `ferrari123` |
+| **Individual** | `maria.gonzalez@email.com` | `password123` |
+| **Tuner** | `juan.perez@tuning.com` | `tuning123` |
+| **Prensa** | `laura@motorpress.com` | `press123` |
+
+### Usuarios Aleatorios
+Para cualquier otro usuario generado automáticamente por las factories, la contraseña por defecto es:
+👉 **`password123`**
