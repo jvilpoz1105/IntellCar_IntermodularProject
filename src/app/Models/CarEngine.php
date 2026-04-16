@@ -44,7 +44,7 @@ class CarEngine extends Model
 
     public function specs()
     {
-        return $this->belongsToMany(EngineSpec::class, 'engine_id', 'id');
+        return $this->hasMany(EngineSpec::class, 'sp_engine', 'engine_id');
     }
 
 }

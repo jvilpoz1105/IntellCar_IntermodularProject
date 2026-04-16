@@ -43,7 +43,7 @@ class CarModel extends Model
     }
      public function specs()
     {
-        return $this->belongsToMany(ModelSpec::class, 'model_id', 'id');
+        return $this->hasMany(ModelSpec::class, 'sp_model', 'model_id');
     }
 }
 

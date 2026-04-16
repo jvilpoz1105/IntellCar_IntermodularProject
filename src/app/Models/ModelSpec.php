@@ -9,19 +9,20 @@ class ModelSpec extends Model
 {
     use HasFactory;
 
-    protected $table = 'model_specs'; 
-    protected $primaryKey = 'id';
+    protected $table = 'model_spec'; 
+    protected $primaryKey = 'spec_id';
 
     protected $fillable = [
-        'spec_name',
-        'value',
-        'meassurement_unit',
-        'variable_type'
+        'sp_key',
+        'sp_value',
+        'measurement_unit',
+        'variable_type',
+        'sp_model'
     ];
     
-    public function models()
+    public function model()
     {
-        return $this->belongsToMany(CarModel::class, 'id', 'model_id');
+        return $this->belongsTo(CarModel::class, 'sp_model', 'model_id');
     }
 }
 

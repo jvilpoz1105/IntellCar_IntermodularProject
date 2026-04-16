@@ -9,18 +9,19 @@ class EngineSpec extends Model
 {
     use HasFactory;
 
-    protected $table = 'engine_specs'; 
-    protected $primaryKey = 'id';
+    protected $table = 'engine_spec'; 
+    protected $primaryKey = 'spec_id';
 
     protected $fillable = [
-        'spec_name',
-        'value',
-        'meassurement_unit',
-        'variable_type'
+        'sp_key',
+        'sp_value',
+        'measurement_unit',
+        'variable_type',
+        'sp_engine'
     ];
     
-    public function engines()
+    public function engine()
     {
-        return $this->belongsToMany(CarEngine::class, 'id', 'engine_id');
+        return $this->belongsTo(CarEngine::class, 'sp_engine', 'engine_id');
     }
 }
