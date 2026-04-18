@@ -53,4 +53,66 @@ Para facilitar las pruebas de la API y el inicio de sesión, se han configurado 
 
 ### Usuarios Aleatorios
 Para cualquier otro usuario generado automáticamente por las factories, la contraseña por defecto es:
-👉 **`password123`**
+👈 **`password123`**
+
+---
+
+## 🎨 Arquitectura del Frontend (Monorepo)
+
+El frontend de IntellCar está organizado como un **Monorepo** moderno utilizando **Turborepo** y **pnpm**.
+
+### Estructura de Carpetas
+- **`front/apps/`**: Contiene las aplicaciones finales.
+  - **`browser-client/`**: Aplicación principal en **Angular 20**. Aquí reside toda la lógica de la web.
+- **`front/packages/`**: Librerías y configuraciones compartidas (TypeScript, ESLint, etc.).
+- **`infrastructure/`**: Ficheros de Terraform para el despliegue en AWS.
+
+### Guía de Desarrollo (Angular)
+Cuando desarrolles el cliente, sigue esta organización para mantener el código limpio:
+
+1. **Pantallas/Páginas**: Crea las vistas completas en `src/app/pages/` (ej. `home`, `catalog`, `login`).
+2. **Componentes de Negocio**: Crea piezas reutilizables con lógica propia en `src/app/shared/components/` (ej. `CarCard`).
+3. **Componentes de UI (Spartan UI)**: 
+   - Se encuentran en `front/apps/browser-client/libs/ui/`.
+   - Para añadir nuevos componentes base (modales, tablas, etc.), usa el CLI desde la carpeta de la app:
+     `npx @spartan-ng/cli:ui [nombre-del-componente]`
+
+### Comandos Útiles (desde carpeta `front/`)
+- `pnpm dev`: Arranca el servidor de desarrollo en modo monorepo ([http://localhost:4200](http://localhost:4200)).
+- `pnpm build`: Genera el build de producción optimizado.
+- `pnpm lint`: Ejecuta el linter en todo el monorepo.
+
+### 🧭 Navegación y Enrutado
+La navegación en Angular Standalone es sencilla y se basa en tres pilares:
+
+1. **Configuración de Rutas**: Se definen en `src/app/app.routes.ts`.
+   ```typescript
+   export const routes: Routes = [
+     { path: 'home', component: HomeComponent },
+     { path: 'marketplace', component: MarketComponent },
+     { path: '', redirectTo: '/home', pathMatch: 'full' }
+   ];
+   ```
+
+2. **Navegación desde el HTML**: Usa `routerLink` para moverte sin recargar la página.
+   ```html
+   <a routerLink="/marketplace" hlmBtn variant="outline">Ir al Marketplace</a>
+   ```
+
+3. **Navegación desde el Código**: Inyecta el `Router` para navegar tras una acción (como un login).
+   ```typescript
+   private _router = inject(Router);
+   
+   navegar() {
+     this._router.navigate(['/dashboard']);
+   }
+   ```
+
+### ✨ Animaciones y Movimiento
+Para conseguir una experiencia premium, el proyecto integra las dos librerías de animación más potentes del ecosistema:
+
+1. **Motion** (`motion.dev`): Utilizada para micro-interacciones y entradas suaves de componentes. Es ligera y aprovecha las APIs nativas del navegador.
+2. **GSAP** (`gsap.com`): El estándar de la industria para animaciones complejas, efectos de scroll y líneas de tiempo avanzadas.
+
+**¿Cómo conviven con Spartan UI?**
+Ambas librerías son agnósticas. Mientras Spartan/Tailwind se encargan del estilo estático, Motion y GSAP manipulan el DOM directamente para añadir vida a los componentes sin interferir con su lógica.
