@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AppUserController;
 use App\Http\Controllers\Api\CarAdvertController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\MakeController;
@@ -11,11 +12,6 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
-
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get('/me', [AuthController::class, 'me']);
-    });
 });
 
 Route::get('/adverts', [CarAdvertController::class, 'index']);
@@ -30,6 +26,18 @@ Route::get('/events', [EventController::class, 'index']);
 Route::get('/events/{id}', [EventController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
+
+    Route::prefix('auth')->group(function () {
+        Route::get('/me', [AuthController::class, 'me']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+    });
+
+    Route::get('/users', [AppUserController::class, 'index'])->middleware('role:admin');
+    Route::get('/users/{id}', [AppUserController::class, 'show']);
+    Route::put('/users/{id}', [AppUserController::class, 'update']);
+    Route::patch('/users/{id}', [AppUserController::class, 'update']);
+    Route::delete('/users/{id}', [AppUserController::class, 'destroy'])->middleware('role:admin');
+
     Route::post('/adverts', [CarAdvertController::class, 'store']);
     Route::put('/adverts/{id}', [CarAdvertController::class, 'update']);
     Route::delete('/adverts/{id}', [CarAdvertController::class, 'destroy']);

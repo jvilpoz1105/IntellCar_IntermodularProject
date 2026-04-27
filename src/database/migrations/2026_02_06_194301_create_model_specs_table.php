@@ -11,13 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('model_specs', function (Blueprint $table) {
-            $table->id();
+        Schema::create('model_spec', function (Blueprint $table) {
+            $table->id('spec_id');
+            $table->string('sp_key');
+            $table->string('sp_value');
+            $table->string('measurement_unit')->nullable();
+            $table->enum('variable_type', ['numeric', 'text', 'boolean'])->default('text');
+            $table->unsignedBigInteger('sp_model');
+
+            $table->foreign('sp_model')->references('model_id')->on('car_model')->onDelete('cascade');
             $table->timestamps();
-            $table->string('spec_name')->nullable(false);
-            $table->string('value')->nullable(false);
-            $table->string('meassurement_unit')->nullable(false);
-            $table->enum('variable_type',['numeric','text','boolean'])->default('text');
         });
     }
 
@@ -26,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('model_specs');
+        Schema::dropIfExists('model_spec');
     }
 };

@@ -13,15 +13,42 @@ class DatabaseSeeder extends Seeder
     {
         // Llamar a todos los seeders en orden correcto
         $this->call([
+            // 1. Base (No dependencies)
             PaddockSeeder::class,
             MakeSeeder::class,
+
+            // 2. Catalog (Dependencies on Paddock/Make)
             CarModelSeeder::class,
             CarEngineSeeder::class,
+
+            // 3. User related (Dependencies on Paddock)
             AppUserSeeder::class,
-            CarAdvertSeeder::class,
+            UserFollowSeeder::class,
+
+            // 4. Specs (Dependencies on CarModel/CarEngine)
+            ModelSpecSeeder::class,
+            EngineSpecSeeder::class,
+
+            // 5. Social (Dependencies on AppUser, CarModel/Engine)
             PostSeeder::class,
+            PostMediaSeeder::class,
+            PostMoodSeeder::class,
+            PostLikeSeeder::class,
+            PostCommentSeeder::class,
+
+            // 6. Marketplace (Dependencies on AppUser, CarModel/Engine)
+            CarAdvertSeeder::class,
+            AdMediaSeeder::class,
+            AdvertMoodSeeder::class,
+
+            // 7. Garage, Tools & Notifs (Dependencies on AppUser, CarModel)
             UserGarageSeeder::class,
+            SavedSearchSeeder::class,
+            NotificationSeeder::class,
+
+            // 8. Events (Dependencies on AppUser, Paddock)
             EventKddSeeder::class,
+            EventAttendanceSeeder::class,
         ]);
 
         $this->command->info('✅ Base de datos poblada correctamente con datos de prueba!');

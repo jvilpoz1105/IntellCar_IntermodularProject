@@ -2,16 +2,13 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\SavedSearch;
 use Illuminate\Database\Seeder;
 
 class SavedSearchSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        //
+        SavedSearch::factory()->count(20)->create();
     }
 }

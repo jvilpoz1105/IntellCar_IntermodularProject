@@ -24,8 +24,8 @@ class AdMediaFactory extends Factory
 
         return [
             'media_url' => $mediaType === 'image'
-                ? 'https://picsum.photos/seed/'.fake()->uuid().'/1280/720'
-                : 'https://example.com/videos/'.fake()->uuid().'.mp4',
+                ? 'https://fastly.picsum.photos/id/133/2742/1828.jpg'
+                : 'https://example.com/dummy-video.mp4',
             'media_type' => $mediaType,
             'ad_id' => CarAdvert::query()->inRandomOrder()->value('ad_id') ?? CarAdvert::factory(),
         ];
