@@ -135,7 +135,7 @@ export class LoginComponent {
       },
       error: (error) => {
         this.loading = false;
-        this.errorMessage = error || 'Error en la autenticación';
+        this.errorMessage = error.message || 'Email o contraseña incorrectos';
       }
     });
   }

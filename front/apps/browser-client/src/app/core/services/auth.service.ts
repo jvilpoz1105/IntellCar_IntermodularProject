@@ -1,18 +1,33 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
+import { API_CONFIG } from '../config/api.config';
 
 export interface User {
-  id: string;
-  email: string;
-  name: string;
-  profile: 'admin' | 'professional' | 'individual' | 'tuner' | 'press';
-  avatar?: string;
+  user_id: number;
+  email_address: string;
+  user_name: string;
+  phone?: string;
+  address?: string;
+  paddock_id?: number;
+}
+
+export interface LoginRequest {
+  email_address: string;
+  user_password: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user?: User;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+  private http = inject(HttpClient);
   private currentUser$ = new BehaviorSubject<User | null>(null);
   private isAuthenticated$ = new BehaviorSubject<boolean>(false);
 
@@ -21,75 +36,70 @@ export class AuthService {
   }
 
   private loadUserFromStorage(): void {
-    const stored = localStorage.getItem('currentUser');
-    if (stored) {
-      const user = JSON.parse(stored);
-      this.currentUser$.next(user);
+    const token = localStorage.getItem('authToken');
+    if (token) {
       this.isAuthenticated$.next(true);
+      this.loadCurrentUser();
     }
   }
 
-  login(email: string, password: string): Observable<User> {
-    return new Observable((observer) => {
-      // Simulamos delay de API
-      setTimeout(() => {
-        // Validación mock
-        const mockUsers: { [key: string]: User } = {
-          'admin@intellcar.com': {
-            id: '1',
-            email: 'admin@intellcar.com',
-            name: 'Administrador',
-            profile: 'admin',
-            avatar: '👨‍💼'
-          },
-          'carlos@ferrari.com': {
-            id: '2',
-            email: 'carlos@ferrari.com',
-            name: 'Carlos',
-            profile: 'professional',
-            avatar: '🏎️'
-          },
-          'maria.gonzalez@email.com': {
-            id: '3',
-            email: 'maria.gonzalez@email.com',
-            name: 'María González',
-            profile: 'individual',
-            avatar: '👩‍🔧'
-          },
-          'juan.perez@tuning.com': {
-            id: '4',
-            email: 'juan.perez@tuning.com',
-            name: 'Juan Pérez',
-            profile: 'tuner',
-            avatar: '🚗'
-          },
-          'laura@motorpress.com': {
-            id: '5',
-            email: 'laura@motorpress.com',
-            name: 'Laura',
-            profile: 'press',
-            avatar: '📰'
-          }
-        };
-
-        if (mockUsers[email] && password === 'password123') {
-          const user = mockUsers[email];
-          this.currentUser$.next(user);
-          this.isAuthenticated$.next(true);
-          localStorage.setItem('currentUser', JSON.stringify(user));
-          observer.next(user);
-          observer.complete();
-        } else {
-          observer.error('Credenciales inválidas');
-        }
-      }, 500);
+  private loadCurrentUser(): void {
+    const url = `${API_CONFIG.BASE_URL}/auth/me`;
+    this.http.get<User>(url).subscribe({
+      next: (user) => {
+        this.currentUser$.next(user);
+      },
+      error: (error) => {
+        console.error('Error loading user:', error);
+        this.logout();
+      }
     });
   }
 
+  login(email: string, password: string): Observable<AuthResponse> {
+    const url = `${API_CONFIG.BASE_URL}/auth/login`;
+    const body: LoginRequest = {
+      email_address: email,
+      user_password: password
+    };
+
+    return this.http.post<AuthResponse>(url, body).pipe(
+      tap((response) => {
+        // Guardar el token
+        if (response.token) {
+          localStorage.setItem('authToken', response.token);
+          this.isAuthenticated$.next(true);
+          
+          // Cargar los datos del usuario
+          this.loadCurrentUser();
+        }
+      }),
+      catchError((error) => {
+        console.error('Error de autenticación:', error);
+        const errorMessage = error.error?.message || 'Error en la autenticación';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
+  }
+
   logout(): void {
+    const url = `${API_CONFIG.BASE_URL}/auth/logout`;
+    
+    this.http.post(url, {}).subscribe({
+      next: () => {
+        this.clearAuth();
+      },
+      error: (error) => {
+        console.error('Error en logout:', error);
+        this.clearAuth();
+      }
+    });
+  }
+
+  private clearAuth(): void {
+    localStorage.removeItem('authToken');
     this.currentUser$.next(null);
     this.isAuthenticated$.next(false);
-    localStorage.removeItem('currentUser');
   }
 
   getCurrentUser(): Observable<User | null> {
@@ -103,4 +113,9 @@ export class AuthService {
   getIsAuthenticatedSync(): boolean {
     return this.isAuthenticated$.value;
   }
+
+  getToken(): string | null {
+    return localStorage.getItem('authToken');
+  }
 }
+

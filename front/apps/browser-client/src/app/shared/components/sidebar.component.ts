@@ -33,16 +33,13 @@ interface NavItem {
       <div class="px-6 py-4 border-b border-slate-700/50">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-lg">
-            {{ currentUser?.avatar }}
+            {{ getAvatar() }}
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-slate-100 truncate">{{ currentUser?.name }}</p>
-            <p class="text-xs text-slate-400 truncate">{{ currentUser?.email }}</p>
+            <p class="text-sm font-semibold text-slate-100 truncate">{{ currentUser?.user_name || 'Usuario' }}</p>
+            <p class="text-xs text-slate-400 truncate">{{ currentUser?.email_address || 'email@mail.com' }}</p>
           </div>
         </div>
-        <span class="mt-2 inline-block px-2 py-1 text-xs font-bold bg-gradient-to-r from-green-500/30 to-cyan-500/30 text-green-300 rounded border border-green-500/30">
-          {{ profileLabel }}
-        </span>
       </div>
 
       <!-- Navigation Items -->
@@ -119,21 +116,18 @@ export class SidebarComponent {
     { label: 'Mi Garaje', route: '/dashboard/garage', icon: '🛠️', color: 'hover:text-orange-400' }
   ];
 
-  get profileLabel(): string {
-    const labels: { [key: string]: string } = {
-      admin: '👨‍💼 Admin',
-      professional: '🏢 Profesional',
-      individual: '👤 Individual',
-      tuner: '🔧 Tuner',
-      press: '📰 Prensa'
-    };
-    return labels[this.currentUser?.profile || 'individual'] || 'Usuario';
-  }
-
   constructor() {
     this.authService.getCurrentUser().subscribe((user) => {
       this.currentUser = user;
     });
+  }
+
+  getAvatar(): string {
+    if (!this.currentUser) return '👤';
+    // Generar un emoji basado en el ID del usuario
+    const avatars = ['👨‍💼', '🏎️', '👩‍🔧', '🚗', '📰', '👨‍🔧', '👩'];
+    const hash = this.currentUser.user_id % avatars.length;
+    return avatars[hash];
   }
 
   onProfile(): void {
