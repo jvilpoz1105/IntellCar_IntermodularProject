@@ -1,0 +1,142 @@
+name: 🚀 Deploy IntellCar to AWS
+
+on:
+  push:
+    branches: [ "main" ] # Se dispara cada vez que se hace push a main
+
+env:
+  AWS_REGION: us-east-1
+  S3_BUCKET_FRONTEND: intellcar-web-tfg-jose
+
+jobs:
+  # ─────────────────────────────────────────────────────
+  # JOB 1: Build de Angular y subida al Bucket S3
+  # ─────────────────────────────────────────────────────
+  deploy-frontend:
+    name: 🌐 Deploy Frontend (S3)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Instalar dependencias del frontend
+        working-directory: ./front
+        run: pnpm install --frozen-lockfile
+
+      - name: Build de producción (Angular via Turbo)
+        working-directory: ./front
+        run: pnpm run build
+
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Subir build al Bucket S3
+        run: |
+          aws s3 sync ./front/apps/browser-client/dist/browser-client/browser/ \
+            s3://${{ env.S3_BUCKET_FRONTEND }} \
+            --delete
+
+  # ─────────────────────────────────────────────────────
+  # JOB 2: Deploy de la API Laravel en EC2 (Docker)
+  # ─────────────────────────────────────────────────────
+  deploy-api:
+    name: 🔧 Deploy API (EC2 + Docker)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Desplegar API vía SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # ── 1. Crear directorio del proyecto si no existe ──
+            mkdir -p /home/ubuntu/intellcar-project
+
+            # ── 2. Clonar o actualizar el repositorio ──
+            if [ -d "/home/ubuntu/intellcar-project/.git" ]; then
+              cd /home/ubuntu/intellcar-project
+              git fetch origin main
+              git reset --hard origin/main
+            else
+              git clone https://github.com/${{ github.repository }}.git /home/ubuntu/intellcar-project
+              cd /home/ubuntu/intellcar-project
+            fi
+
+            # ── 3. Crear el .env de PRODUCCIÓN dinámicamente ──
+            cat > src/.env << 'ENVEOF'
+            APP_NAME=IntellCar
+            APP_ENV=production
+            APP_KEY=${{ secrets.APP_KEY }}
+            APP_DEBUG=false
+            APP_URL=http://${{ secrets.SERVER_IP }}
+
+            APP_LOCALE=en
+            APP_FALLBACK_LOCALE=en
+            APP_FAKER_LOCALE=en_US
+
+            BCRYPT_ROUNDS=12
+
+            LOG_CHANNEL=stack
+            LOG_STACK=single
+            LOG_DEPRECATIONS_CHANNEL=null
+            LOG_LEVEL=error
+
+            DB_CONNECTION=mysql
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_PORT=3306
+            DB_DATABASE=intellcar_db
+            DB_USERNAME=admin
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+
+            SESSION_DRIVER=database
+            SESSION_LIFETIME=120
+            SESSION_ENCRYPT=false
+            SESSION_PATH=/
+            SESSION_DOMAIN=null
+
+            BROADCAST_CONNECTION=log
+            FILESYSTEM_DISK=s3
+            QUEUE_CONNECTION=database
+
+            CACHE_STORE=database
+
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_DEFAULT_REGION=us-east-1
+            AWS_BUCKET=intellcar-media-tfg-jose
+            AWS_USE_PATH_STYLE_ENDPOINT=false
+
+            VITE_APP_NAME="IntellCar"
+            ENVEOF
+
+            # ── 4. Reconstruir SOLO el contenedor de Laravel (sin BD local) ──
+            docker compose -f docker-compose.prod.yml up -d --build
+
+            # ── 5. Instalar dependencias de Composer ──
+            docker exec intellcar_api composer install --no-dev --optimize-autoloader
+
+            # ── 6. Ejecutar migraciones y cachear configuración ──
+            docker exec intellcar_api php artisan migrate --force
+            docker exec intellcar_api php artisan config:cache
+            docker exec intellcar_api php artisan route:cache
+            docker exec intellcar_api php artisan view:cache
