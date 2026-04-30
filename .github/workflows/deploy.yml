@@ -88,7 +88,7 @@ jobs:
             APP_NAME=IntellCar
             APP_ENV=production
             APP_KEY=${{ secrets.APP_KEY }}
-            APP_DEBUG=true
+            APP_DEBUG=false
             APP_URL=http://${{ secrets.SERVER_IP }}
 
             APP_LOCALE=en
@@ -141,8 +141,8 @@ jobs:
             docker exec intellcar_api chown -R www-data:www-data /var/www/html
             docker exec intellcar_api chmod -R 775 storage bootstrap/cache
 
-            # ── 7. Ejecutar migraciones y cachear configuración ──
-            docker exec intellcar_api php artisan migrate --force
+            # ── 7. Ejecutar migraciones con SEED y cachear configuración ──
+            docker exec intellcar_api php artisan migrate:fresh --seed --force
             docker exec intellcar_api php artisan config:cache
             docker exec intellcar_api php artisan route:cache
             docker exec intellcar_api php artisan view:cache
