@@ -50,6 +50,6 @@ class EventKdd extends Model
     public function attendees()
     {
         return $this->belongsToMany(AppUser::class, 'event_attendance', 'event_id', 'user_id')
-                    ->withTimestamps();
+                    ->withPivot('joined_at');
     }
 }

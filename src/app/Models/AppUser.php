@@ -107,6 +107,6 @@ class AppUser extends Authenticatable
     public function attendingEvents()
     {
         return $this->belongsToMany(EventKdd::class, 'event_attendance', 'user_id', 'event_id')
-                    ->withTimestamps();
+                    ->withPivot('joined_at');
     }
 }
