@@ -137,7 +137,11 @@ jobs:
             # ── 5. Instalar dependencias de Composer ──
             docker exec intellcar_api composer install --no-dev --optimize-autoloader
 
-            # ── 6. Ejecutar migraciones y cachear configuración ──
+            # ── 6. Arreglar permisos de storage y cache ──
+            docker exec intellcar_api chown -R www-data:www-data storage bootstrap/cache
+            docker exec intellcar_api chmod -R 775 storage bootstrap/cache
+
+            # ── 7. Ejecutar migraciones y cachear configuración ──
             docker exec intellcar_api php artisan migrate --force
             docker exec intellcar_api php artisan config:cache
             docker exec intellcar_api php artisan route:cache
