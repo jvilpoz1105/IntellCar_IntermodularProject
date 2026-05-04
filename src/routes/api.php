@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AppUserController;
 use App\Http\Controllers\Api\MarketControl;
 use App\Http\Controllers\Api\UnivControl;
 use App\Http\Controllers\Api\KddControl;
+use App\Http\Controllers\Api\ProfileControl;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -55,8 +56,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/users/{id}', [AppUserController::class, 'update']);
     Route::patch('/users/{id}', [AppUserController::class, 'update']);
     
+    // --- NUEVO: GESTIÓN DEL PERFIL PROPIO ---
+    Route::get('/profile', [ProfileControl::class, 'show']);
+    Route::put('/profile', [ProfileControl::class, 'update']);
+    Route::post('/profile/picture', [ProfileControl::class, 'updatePicture']);
+    Route::patch('/profile/soft-delete', [ProfileControl::class, 'softDelete']);
+    
+    // --- NUEVO: GESTIÓN DEL GARAJE ---
+    Route::post('/profile/garage', [ProfileControl::class, 'addGarageItem']);
+    // Usamos POST para updateGarageItem porque enviar archivos vía PUT en PHP multipart/form-data a veces falla, 
+    // pero Laravel admite POST con _method=PUT en la request. Aquí lo dejamos en POST para simplificar envío de fotos.
+    Route::post('/profile/garage/{id}', [ProfileControl::class, 'updateGarageItem']); 
+    Route::delete('/profile/garage/{id}', [ProfileControl::class, 'removeGarageItem']);
+    
     // Borrar un usuario (Solo Admin)
-    Route::delete('/users/{id}', [AppUserController::class, 'destroy'])->middleware('role:admin');
+    Route::delete('/users/{id}', [ProfileControl::class, 'destroy'])->middleware('role:admin');
 
     // --- ACTUALIZACIONES DE SERVICIOS (Requieren Token y ser Dueño/Admin) ---
     // NOTA: La lógica de si es "tuyo" ya está dentro de la función update() del controlador
