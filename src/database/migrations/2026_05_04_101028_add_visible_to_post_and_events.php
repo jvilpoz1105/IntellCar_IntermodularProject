@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('post', function (Blueprint $table) {
-            $table->boolean('visible')->default(true);
+            $table->boolean('visible')->default(false);
         });
 
         Schema::table('event_kdd', function (Blueprint $table) {
-            $table->boolean('visible')->default(true);
+            $table->boolean('visible')->default(false);
         });
     }
 
