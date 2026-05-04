@@ -91,15 +91,26 @@ class UnivControl extends Controller
     {
         $post = Post::findOrFail($id);
 
-        // Verificar permisos (autor o admin)
-        if ($post->author_id !== $request->user()->user_id && $request->user()->user_tag !== 'admin') {
-            return response()->json(['message' => 'No tienes permiso para eliminar este post'], 403);
+        if ($request->user()->user_tag !== 'admin') {
+            return response()->json(['message' => 'Solo los administradores pueden eliminar este post definitivamente'], 403);
         }
 
+        // 1. Desvincular relaciones N:M
+        $post->likes()->detach();
+        $post->moods()->detach();
+
+        // 2. Eliminar comentarios del post
+        $post->comments()->delete();
+
+        // 3. Borrar las entradas en la tabla de multimedia
+        // TODO: MÁS ADELANTE SE DEBEN BORRAR FÍSICAMENTE DE S3 TAMBIÉN
+        $post->media()->delete();
+
+        // 4. Finalmente borrar el post
         $post->delete();
 
         return response()->json([
-            'message' => 'Post eliminado exitosamente'
+            'message' => 'Post y todas sus relaciones eliminados exitosamente'
         ]);
     }
 }

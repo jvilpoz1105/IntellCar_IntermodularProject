@@ -100,15 +100,23 @@ class MarketControl extends Controller
     {
         $advert = CarAdvert::findOrFail($id);
 
-        // Verificar permisos (dueño o admin)
-        if ($advert->seller_id !== $request->user()->user_id && $request->user()->user_tag !== 'admin') {
-            return response()->json(['message' => 'No tienes permiso para eliminar este anuncio'], 403);
+        // Seguridad extra (aunque ya esté protegido por middleware)
+        if ($request->user()->user_tag !== 'admin') {
+            return response()->json(['message' => 'Solo los administradores pueden eliminar este anuncio definitivamente'], 403);
         }
 
+        // 1. Desvincular de los moods (sin afectar a los paddocks en sí)
+        $advert->moods()->detach();
+
+        // 2. Borrar las entradas en la tabla de multimedia
+        // TODO: MÁS ADELANTE SE DEBEN BORRAR FÍSICAMENTE DE S3 TAMBIÉN
+        $advert->media()->delete();
+
+        // 3. Finalmente borrar el anuncio
         $advert->delete();
 
         return response()->json([
-            'message' => 'Anuncio eliminado exitosamente',
+            'message' => 'Anuncio y sus relaciones eliminados exitosamente',
         ]);
     }
 }

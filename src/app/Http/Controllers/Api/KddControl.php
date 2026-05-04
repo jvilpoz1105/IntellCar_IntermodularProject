@@ -97,15 +97,18 @@ class KddControl extends Controller
     {
         $event = EventKdd::findOrFail($id);
 
-        // Verificar permisos (creador o admin)
-        if ($event->creator_id !== $request->user()->user_id && $request->user()->user_tag !== 'admin') {
-            return response()->json(['message' => 'No tienes permiso para eliminar este evento'], 403);
+        if ($request->user()->user_tag !== 'admin') {
+            return response()->json(['message' => 'Solo los administradores pueden eliminar este evento definitivamente'], 403);
         }
 
+        // 1. Desvincular todos los asistentes de la tabla relacional
+        $event->attendees()->detach();
+
+        // 2. Finalmente borrar el evento
         $event->delete();
 
         return response()->json([
-            'message' => 'Evento eliminado exitosamente'
+            'message' => 'Evento y sus asistentes desvinculados eliminados exitosamente'
         ]);
     }
 }
