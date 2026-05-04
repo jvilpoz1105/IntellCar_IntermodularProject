@@ -18,11 +18,15 @@ class Post extends Model
         'content',
         'model_id',
         'engine_id',
+        'onDeleteRequest',
+        'visible',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'onDeleteRequest' => 'datetime',
+        'visible' => 'boolean',
     ];
 
     /**
