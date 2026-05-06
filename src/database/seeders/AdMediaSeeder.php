@@ -9,7 +9,7 @@ use Illuminate\Database\Seeder;
 class AdMediaSeeder extends Seeder
 {
     /**
-     * Run the database seeders seeder.
+     * Run the database 2 seeders seeder.
      */
     public function run(): void
     {
