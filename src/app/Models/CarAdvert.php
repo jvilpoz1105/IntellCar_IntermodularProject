@@ -26,12 +26,14 @@ class CarAdvert extends Model
         'model_id',
         'engine_id',
         'seller_id',
+        'onDeleteRequest',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'visible' => 'boolean',
         'publish_date' => 'datetime',
+        'onDeleteRequest' => 'datetime',
     ];
 
     /**

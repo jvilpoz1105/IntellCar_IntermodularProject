@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 class CarEngineSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Run the database seeder.
      */
     public function run(): void
     {
