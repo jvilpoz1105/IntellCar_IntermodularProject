@@ -1,0 +1,21 @@
+# ──────────────────────────────────────────────────────
+# Docker Compose de PRODUCCIÓN para IntellCar
+# ──────────────────────────────────────────────────────
+# Solo levanta el contenedor de Laravel (Apache + PHP).
+# La base de datos vive en AWS RDS, NO necesitamos MySQL local.
+# phpMyAdmin tampoco es necesario en producción.
+#
+# Uso: docker compose -f docker-compose.prod.yml up -d --build
+
+services:
+  laravel:
+    build: .
+    container_name: intellcar_api
+    ports:
+      - "80:80"     # Producción: Puerto HTTP directo
+    volumes:
+      - ./src:/var/www/html
+    restart: unless-stopped
+    environment:
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data

@@ -24,6 +24,8 @@ class AppUser extends Authenticatable
         'user_tag',
         'is_active',
         'paddock_id',
+        'profile_picture',
+        'onDeleteRequest',
     ];
 
     protected $hidden = [
@@ -33,6 +35,7 @@ class AppUser extends Authenticatable
     protected $casts = [
         'is_active' => 'boolean',
         'registration_date' => 'datetime',
+        'onDeleteRequest' => 'datetime',
     ];
 
     /**

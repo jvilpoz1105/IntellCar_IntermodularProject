@@ -1,11 +1,11 @@
 # 📚 Documentación de la API IntellCar
 
-Este documento contiene la guía oficial de los endpoints disponibles en la API de IntellCar, organizada por distritos.
+Este documento contiene la guía oficial de los endpoints disponibles en la API de IntellCar, organizada por distritos (servicios). Recientemente, la API ha sido reestructurada para enfocarse en **servicios de dominio** en lugar de tablas de base de datos, mejorando la escalabilidad y separando la gestión pública de la privada (Soft Deletes vs. Borrado Real).
 
 ---
 
 ## 🔐 Distrito 0: Autenticación
-Gestión de acceso y tokens de seguridad.
+Gestión de acceso y tokens de seguridad (Laravel Sanctum).
 
 ### 1. Registrar Usuario
 Crea una nueva cuenta de usuario en la plataforma.
@@ -39,10 +39,10 @@ Obtén un token Bearer para realizar peticiones protegidas.
 - **Respuesta Exitosa (200):** Devuelve el `token`.
 
 ### 3. Mi Perfil
-Obtén la información del usuario actualmente autenticado.
+Obtén la información del usuario actualmente autenticado (obsoleto frente al nuevo `/api/profile`, pero mantenido por compatibilidad).
 - **URL:** `/api/auth/me`
 - **Método:** `GET`
-- **Protección:** `auth:sanctum` (Token Requerido)
+- **Protección:** `auth:sanctum`
 
 ### 4. Cerrar Sesión (Logout)
 Invalida el token actual.
@@ -52,36 +52,147 @@ Invalida el token actual.
 
 ---
 
-## 👤 Distrito 1: Usuarios
-Gestión y CRUD de perfiles de la comunidad.
+## 👤 Distrito 1: Usuarios (Administración)
+Gestión general de perfiles por parte del equipo de administración.
 
 ### 1. Listar Usuarios
-Obtiene una lista paginada de todos los usuarios registrados.
 - **URL:** `/api/users`
 - **Método:** `GET`
-- **Protección:** `Admin` (Solo usuarios con `user_tag == 'admin'`)
+- **Protección:** `Admin` (Solo administradores)
 
-### 2. Ver Perfil Específico
-Obtiene los detalles de un usuario, incluyendo su garaje y posts.
+### 2. Ver Perfil Específico (Público/Protegido)
 - **URL:** `/api/users/{id}`
 - **Método:** `GET`
 - **Protección:** `auth:sanctum`
 
-### 3. Actualizar Perfil
-Modifica los datos de un usuario.
-- **URL:** `/api/users/{id}`
-- **Método:** `PUT` / `PATCH`
-- **Protección:** `Dueño` o `Admin` (Un usuario solo puede editarse a sí mismo).
-
-### 4. Eliminar Usuario
-Borra permanentemente una cuenta.
+### 3. Borrar Usuario Definitivamente
 - **URL:** `/api/users/{id}`
 - **Método:** `DELETE`
-- **Protección:** `Admin` (Un administrador no puede borrarse a sí mismo).
+- **Protección:** `Admin` (Borra relaciones y multimedia)
+
+*(Nota: La edición de uno mismo se ha movido al Distrito 2).*
+
+---
+
+## 🏎️ Distrito 2: Perfil Propio y Garaje (`ProfileControl`)
+Gestión del área personal del usuario autenticado.
+
+### 1. Ver y Editar Datos Personales
+- **URL:** `/api/profile`
+- **Métodos:** `GET` (Ver datos propios) | `PUT` (Editar nombre, teléfono, email de contacto...)
+- **Protección:** `auth:sanctum`
+
+### 2. Actualizar Foto de Perfil
+- **URL:** `/api/profile/picture`
+- **Método:** `POST` (Soporta `multipart/form-data`)
+- **Protección:** `auth:sanctum`
+
+### 3. Solicitar Borrado de Cuenta (Soft Delete)
+Marca la cuenta para eliminación lógica (`onDeleteRequest = now()`).
+- **URL:** `/api/profile/soft-delete`
+- **Método:** `PATCH`
+- **Protección:** `auth:sanctum`
+
+### 4. Gestionar el Garaje Virtual
+- **Añadir Coche:** `POST /api/profile/garage`
+- **Actualizar Coche:** `POST /api/profile/garage/{id}` *(Usamos POST con form-data en lugar de PUT para facilitar la subida de fotos)*.
+- **Eliminar Coche:** `DELETE /api/profile/garage/{id}`
+- **Protección:** `auth:sanctum`
+
+---
+
+## 🛒 Distrito 3: Market (`MarketControl`)
+Compra y venta de vehículos (Anuncios).
+
+### 1. Listar Anuncios (Público)
+- **URL:** `/api/market`
+- **Método:** `GET`
+- **Nota:** Filtra automáticamente los anuncios que no son visibles (`visible = false`) o que han solicitado borrado.
+
+### 2. Detalle de Anuncio (Público)
+- **URL:** `/api/market/{id}`
+- **Método:** `GET`
+
+### 3. Editar Anuncio
+- **URL:** `/api/market/{id}`
+- **Método:** `PUT` / `PATCH`
+- **Protección:** `Dueño` o `Admin`
+
+### 4. Solicitar Borrado (Soft Delete)
+- **URL:** `/api/market/{id}/soft-delete`
+- **Método:** `PATCH`
+- **Protección:** `Dueño`
+
+### 5. Borrado Definitivo
+- **URL:** `/api/market/{id}`
+- **Método:** `DELETE`
+- **Protección:** `Admin` (Limpia fotos en disco y relaciones)
+
+---
+
+## 🌐 Distrito 4: Social (`UnivControl`)
+Red social, posts y publicaciones de la comunidad.
+
+### 1. Listar Posts (Público)
+- **URL:** `/api/social`
+- **Método:** `GET`
+- **Nota:** Excluye contenido marcado como `visible = false` o con `onDeleteRequest`.
+
+### 2. Detalle de Post (Público)
+- **URL:** `/api/social/{id}`
+- **Método:** `GET`
+
+### 3. Editar Post
+- **URL:** `/api/social/{id}`
+- **Método:** `PUT` / `PATCH`
+- **Protección:** `Autor` o `Admin`
+
+### 4. Solicitar Borrado (Soft Delete)
+- **URL:** `/api/social/{id}/soft-delete`
+- **Método:** `PATCH`
+- **Protección:** `Autor`
+
+### 5. Borrado Definitivo
+- **URL:** `/api/social/{id}`
+- **Método:** `DELETE`
+- **Protección:** `Admin` (Limpia multimedia, desvincula likes y borra comentarios).
+
+---
+
+## 📍 Distrito 5: KDDs (`KddControl`)
+Eventos, rutas y quedadas de motor.
+
+### 1. Listar Eventos Próximos (Público)
+- **URL:** `/api/kdds`
+- **Método:** `GET`
+- **Nota:** Solo lista eventos futuros (`event_date >= now()`) y visibles.
+
+### 2. Detalle de Evento (Público)
+- **URL:** `/api/kdds/{id}`
+- **Método:** `GET`
+
+### 3. Editar Evento
+- **URL:** `/api/kdds/{id}`
+- **Método:** `PUT` / `PATCH`
+- **Protección:** `Creador` o `Admin`
+
+### 4. Solicitar Borrado (Soft Delete)
+- **URL:** `/api/kdds/{id}/soft-delete`
+- **Método:** `PATCH`
+- **Protección:** `Creador`
+
+### 5. Borrado Definitivo
+- **URL:** `/api/kdds/{id}`
+- **Método:** `DELETE`
+- **Protección:** `Admin` (Desvincula asistentes de la tabla relacional).
 
 ---
 
 > [!TIP]
 > **Formato de Autenticación:**  
-> Para todos los métodos protegidos, debes incluir la cabecera:  
+> Para todos los métodos protegidos (`auth:sanctum`), debes incluir la cabecera:  
 > `Authorization: Bearer <TU_TOKEN_AQUÍ>`
+
+> [!NOTE]
+> **Estrategia de Borrado (Soft Delete vs Hard Delete)**
+> Los usuarios (dueños/creadores) solo pueden hacer **Soft Delete** (`PATCH /soft-delete`), lo cual oculta el recurso al público añadiendo un timestamp a `onDeleteRequest`. Solo los Administradores tienen permiso para ejecutar el método **DELETE** tradicional, el cual destruye el recurso de la base de datos limpiando de forma segura los archivos físicos multimedia y desenlazando las relaciones complejas.
