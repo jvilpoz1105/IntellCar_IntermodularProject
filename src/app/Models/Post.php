@@ -56,7 +56,7 @@ class Post extends Model
     public function likes()
     {
         return $this->belongsToMany(AppUser::class, 'post_like', 'post_id', 'user_id')
-                    ->withTimestamps();
+                    ->withPivot('created_at');
     }
 
     public function comments()

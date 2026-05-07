@@ -69,19 +69,19 @@ class AppUser extends Authenticatable
     public function likes()
     {
         return $this->belongsToMany(Post::class, 'post_like', 'user_id', 'post_id')
-                    ->withTimestamps();
+                    ->withPivot('created_at');
     }
 
     public function following()
     {
         return $this->belongsToMany(AppUser::class, 'user_follow', 'follower_id', 'followed_id')
-                    ->withTimestamps();
+                    ->withPivot('created_at');
     }
 
     public function followers()
     {
         return $this->belongsToMany(AppUser::class, 'user_follow', 'followed_id', 'follower_id')
-                    ->withTimestamps();
+                    ->withPivot('created_at');
     }
 
     public function garage()

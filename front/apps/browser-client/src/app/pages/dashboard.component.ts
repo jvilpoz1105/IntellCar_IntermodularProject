@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { Router, RouterOutlet } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, filter, switchMap, take } from 'rxjs/operators';
 import { SidebarComponent } from '../shared/components/sidebar.component';
@@ -36,7 +37,7 @@ interface EventKdd {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, SidebarComponent],
+  imports: [CommonModule, SidebarComponent, RouterOutlet],
   template: `
     <div class="flex h-screen bg-slate-900 text-slate-100">
       <app-sidebar></app-sidebar>
@@ -54,6 +55,7 @@ interface EventKdd {
         </header>
 
         <div class="flex-1 overflow-auto">
+          <ng-container *ngIf="isOverview; else childView">
           <div class="p-8">
             <div class="mb-8 p-6 bg-gradient-to-br from-green-500/10 to-cyan-500/10 border border-green-500/30 rounded-xl">
               <h2 class="text-xl font-bold text-slate-100 mb-2">Datos reales desde tu base de datos</h2>
@@ -122,6 +124,11 @@ interface EventKdd {
               </section>
             </div>
           </div>
+          </ng-container>
+
+          <ng-template #childView>
+            <router-outlet></router-outlet>
+          </ng-template>
         </div>
       </main>
     </div>
@@ -147,6 +154,7 @@ interface EventKdd {
 export class DashboardComponent implements OnInit {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+  private router = inject(Router);
 
   loading = true;
   currentUserName = 'Usuario';
@@ -165,6 +173,10 @@ export class DashboardComponent implements OnInit {
     user: true,
     events: true,
   };
+
+  get isOverview(): boolean {
+    return this.router.url === '/dashboard';
+  }
 
   ngOnInit(): void {
     this.authService

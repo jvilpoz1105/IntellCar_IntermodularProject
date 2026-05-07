@@ -12,7 +12,6 @@ export const routes: Routes = [
     component: DashboardComponent,
     canActivate: [AuthGuardFn],
     children: [
-      { path: '', component: DashboardComponent },
       { path: 'marketplace', component: MarketplaceComponent },
       { path: 'events', component: EventsComponent },
       { path: 'universe', component: UniverseComponent },
