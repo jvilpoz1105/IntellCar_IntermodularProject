@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Filters\CarAdvertFilter;
 use App\Models\CarAdvert;
 use App\Http\Resources\Api\MarketAdvertResource;
 use App\Http\Resources\Api\MarketAdvertSummaryResource;
@@ -11,15 +12,82 @@ use Illuminate\Http\Request;
 class MarketControl extends Controller
 {
     /**
-     * Obtener listado general (solo datos más importantes).
+     * Obtener listado general con filtros opcionales.
+     *
+     * Parámetros de query soportados:
+     *  Propios:      title[like], type[eq], price[lte|gte], km[lte|gte],
+     *                color[eq|like], year[lte|gte], region[eq|like], city[eq|like]
+     *  Relacionales: make[eq|like], model[eq|like], fuel[eq], engine[eq|like]
+     *  Specs EAV:    modelSpec[<key>][eq|lt|gt|lte|gte|like]
+     *                engineSpec[<key>][eq|lt|gt|lte|gte|like]
+     *
+     * Ejemplo: GET /api/market?price[lte]=30000&make[like]=BMW&engineSpec[cv][gte]=200
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Para el listado general traemos solo las relaciones básicas (modelo, fotos).
-        // Evitamos sobrecargar con motor, detalles complejos o todos los estados de ánimo (moods).
-        $adverts = CarAdvert::with(['model.make', 'media'])
+        $filter  = new CarAdvertFilter();
+        $queries = $filter->newTransform($request);
+
+        $query = CarAdvert::query()
             ->where('visible', true)
-            ->whereNull('onDeleteRequest')
+            ->whereNull('onDeleteRequest');
+
+        // ── Filtros sobre campos propios ──────────────────────────────────────
+        if (!empty($queries['main'])) {
+            $query->where($queries['main']);
+        }
+
+        // ── Filtros relacionales simples (make, model, fuel, engine) ──────────
+        foreach ($queries['relations'] as $relationPath => $clauses) {
+            foreach ($clauses as $clause) {
+                $query->whereHas($relationPath, function ($q) use ($clause) {
+                    $q->where($clause['column'], $clause['operator'], $clause['value']);
+                });
+            }
+        }
+
+        // ── Filtros EAV: modelSpec[<key>][op]=valor ───────────────────────────
+        // Ejemplo: ?modelSpec[puertas][eq]=4  o  ?modelSpec[potencia][gte]=150
+        $operatorMap = ['eq' => '=', 'like' => 'like', 'lt' => '<', 'gt' => '>', 'lte' => '<=', 'gte' => '>='];
+
+        if ($request->has('modelSpec')) {
+            foreach ($request->query('modelSpec') as $key => $filters) {
+                $query->whereHas('model.specs', function ($q) use ($key, $filters, $operatorMap) {
+                    $q->where('sp_key', $key);
+                    foreach ($filters as $op => $value) {
+                        $sqlOp = $operatorMap[$op] ?? '=';
+                        if (in_array($op, ['gte', 'lte', 'gt', 'lt'])) {
+                            $q->whereRaw("CAST(sp_value AS DECIMAL(10,2)) {$sqlOp} ?", [$value]);
+                        } else {
+                            $finalValue = ($op === 'like') ? "%{$value}%" : $value;
+                            $q->where('sp_value', $sqlOp, $finalValue);
+                        }
+                    }
+                });
+            }
+        }
+
+        // ── Filtros EAV: engineSpec[<key>][op]=valor ──────────────────────────
+        // Ejemplo: ?engineSpec[cv][gte]=200  o  ?engineSpec[traccion][eq]=AWD
+        if ($request->has('engineSpec')) {
+            foreach ($request->query('engineSpec') as $key => $filters) {
+                $query->whereHas('engine.specs', function ($q) use ($key, $filters, $operatorMap) {
+                    $q->where('sp_key', $key);
+                    foreach ($filters as $op => $value) {
+                        $sqlOp = $operatorMap[$op] ?? '=';
+                        if (in_array($op, ['gte', 'lte', 'gt', 'lt'])) {
+                            $q->whereRaw("CAST(sp_value AS DECIMAL(10,2)) {$sqlOp} ?", [$value]);
+                        } else {
+                            $finalValue = ($op === 'like') ? "%{$value}%" : $value;
+                            $q->where('sp_value', $sqlOp, $finalValue);
+                        }
+                    }
+                });
+            }
+        }
+
+        $adverts = $query
+            ->with(['model.make', 'media'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 

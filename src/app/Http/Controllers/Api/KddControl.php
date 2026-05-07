@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Filters\KddEventFilter;
 use App\Models\EventKdd;
 use App\Http\Resources\Api\KddEventResource;
 use App\Http\Resources\Api\KddEventSummaryResource;
@@ -11,15 +12,41 @@ use Illuminate\Http\Request;
 class KddControl extends Controller
 {
     /**
-     * Obtener listado general (solo datos más importantes).
+     * Obtener listado general con filtros opcionales.
+     *
+     * Parámetros de query soportados:
+     *  Propios:      title[like], description[like], city[eq|like], location[like],
+     *                dateFrom[gte], dateTo[lte], maxSlots[gte|lte]
+     *  Relacionales: creator[eq|like], paddock[eq|like]
+     *
+     * Ejemplo: GET /api/kdd?city[like]=Madrid&dateFrom[gte]=2025-06-01&paddock[like]=drift
      */
-    public function index()
+    public function index(Request $request)
     {
-        // En la vista general mostramos creador y paddock, sin cargar los asistentes completos
-        $events = EventKdd::with(['creator:user_id,username,profile_picture', 'paddock'])
-            ->where('event_date', '>=', now())
+        $filter  = new KddEventFilter();
+        $queries = $filter->newTransform($request);
+
+        $query = EventKdd::query()
+            ->where('event_date', '>=', now())   // Solo eventos futuros
             ->where('visible', true)
-            ->whereNull('onDeleteRequest')
+            ->whereNull('onDeleteRequest');
+
+        // ── Filtros sobre campos propios ──────────────────────────────────────
+        if (!empty($queries['main'])) {
+            $query->where($queries['main']);
+        }
+
+        // ── Filtros relacionales simples (creator, paddock) ───────────────────
+        foreach ($queries['relations'] as $relationPath => $clauses) {
+            foreach ($clauses as $clause) {
+                $query->whereHas($relationPath, function ($q) use ($clause) {
+                    $q->where($clause['column'], $clause['operator'], $clause['value']);
+                });
+            }
+        }
+
+        $events = $query
+            ->with(['creator:user_id,username,profile_picture', 'paddock'])
             ->orderBy('event_date', 'asc')
             ->paginate(20);
 
