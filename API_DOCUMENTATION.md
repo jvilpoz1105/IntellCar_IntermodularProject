@@ -4,6 +4,65 @@ Este documento contiene la guía oficial de los endpoints disponibles en la API 
 
 ---
 
+## 🛠️ Swagger / OpenAPI
+
+La API dispone de documentación interactiva generada automáticamente con **L5-Swagger** (OpenAPI 3.0.0).
+
+### Acceso a la UI
+
+| Entorno | URL |
+|---------|-----|
+| Local (Artisan serve) | `http://localhost:8000/api/documentation` |
+| Docker | `http://localhost:80/api/documentation` (según el puerto mapeado) |
+
+### Especificación JSON
+
+El fichero generado se encuentra en:
+```
+src/storage/api-docs/api-docs.json
+```
+
+### Regenerar la documentación
+
+Cada vez que se añadan o modifiquen anotaciones `@OA` en los controladores, hay que ejecutar:
+
+```bash
+php artisan l5-swagger:generate
+```
+
+Para regenerar automáticamente en cada petición durante el desarrollo, establece en `.env`:
+```env
+L5_SWAGGER_GENERATE_ALWAYS=true
+```
+
+### Autenticación en Swagger UI
+
+Los endpoints protegidos requieren un token Sanctum. Pasos:
+
+1. Llama a `POST /api/auth/login` desde Swagger UI y copia el `token` de la respuesta.
+2. Haz clic en **Authorize** (icono del candado) en la esquina superior derecha de la UI.
+3. Introduce el valor `Bearer <tu_token>` en el campo `sanctum (http, Bearer)`.
+4. Confirma con **Authorize**.
+
+### Dependencias instaladas
+
+| Paquete | Versión |
+|---------|---------|
+| `darkaonline/l5-swagger` | ^11.0 |
+| `zircote/swagger-php` | ^6.0 (transitiva) |
+| `doctrine/annotations` | ^2.0 (requerida para parsear anotaciones `@OA`) |
+
+### Configuración relevante
+
+Fichero de configuración: `src/config/l5-swagger.php`
+
+- **Ruta UI:** `api/documentation`
+- **Directorio de escaneo:** `app/` (todos los controladores y esquemas bajo `app/`)
+- **Analizador:** `ReflectionAnalyser` con soporte de atributos PHP y docblocks `@OA`
+- **Especificación por defecto:** OpenAPI 3.0.0
+
+---
+
 ## 🔐 Distrito 0: Autenticación
 Gestión de acceso y tokens de seguridad (Laravel Sanctum).
 
