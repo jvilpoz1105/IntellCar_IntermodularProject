@@ -18,6 +18,16 @@ export interface LoginRequest {
   user_password: string;
 }
 
+export interface RegisterRequest {
+  user_name: string;
+  email_address: string;
+  phone: string;
+  user_password: string;
+  contact_email?: string;
+  address?: string;
+  paddock_id?: number | null;
+}
+
 export interface AuthResponse {
   token: string;
   user?: User;
@@ -77,6 +87,33 @@ export class AuthService {
       catchError((error) => {
         console.error('Error de autenticación:', error);
         const errorMessage = error.error?.message || 'Error en la autenticación';
+        return throwError(() => new Error(errorMessage));
+      })
+    );
+  }
+
+  register(payload: RegisterRequest): Observable<AuthResponse> {
+    const url = `${API_CONFIG.BASE_URL}/auth/register`;
+
+    return this.http.post<AuthResponse>(url, payload).pipe(
+      tap((response) => {
+        if (response.token) {
+          localStorage.setItem('authToken', response.token);
+          this.isAuthenticated$.next(true);
+          this.loadCurrentUser();
+        }
+      }),
+      catchError((error) => {
+        console.error('Error de registro:', error);
+
+        const validationErrors = error.error?.errors;
+        if (validationErrors && typeof validationErrors === 'object') {
+          const firstKey = Object.keys(validationErrors)[0];
+          const firstMessage = validationErrors[firstKey]?.[0];
+          return throwError(() => new Error(firstMessage || 'Error en el registro'));
+        }
+
+        const errorMessage = error.error?.message || 'Error en el registro';
         return throwError(() => new Error(errorMessage));
       })
     );

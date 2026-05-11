@@ -1,13 +1,13 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-black flex items-center justify-center p-4 relative overflow-hidden">
       <!-- Fondo animado con gradientes neon -->
@@ -75,6 +75,13 @@ import { AuthService } from '../core/services/auth.service';
               </span>
             </button>
           </form>
+
+          <div class="mt-5 text-center text-sm text-slate-400">
+            ¿No tienes cuenta?
+            <a routerLink="/register" class="ml-1 font-semibold text-cyan-300 hover:text-cyan-200 transition">
+              Regístrate aquí
+            </a>
+          </div>
 
           <!-- Demo Users -->
           <div class="mt-8 pt-6 border-t border-slate-700">

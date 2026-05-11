@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { AuthService, User } from '../core/services/auth.service';
 import { API_CONFIG } from '../core/config/api.config';
 
 interface PaginatedResponse<T> {
@@ -50,6 +51,22 @@ interface UniversePost {
   }>;
   likes?: unknown[];
   comments?: unknown[];
+}
+
+interface ProfileDetail {
+  user_id: number;
+  user_name: string;
+  email_address: string;
+  contact_email?: string;
+  address?: string;
+  phone?: string;
+  user_tag?: string;
+  registration_date?: string;
+  paddock?: {
+    paddock_name?: string;
+  };
+  posts?: unknown[];
+  garage?: unknown[];
 }
 
 @Component({
@@ -365,40 +382,134 @@ export class GarageComponent {}
   imports: [CommonModule],
   template: `
     <div class="p-8">
-      <h2 class="text-3xl font-bold mb-6 bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent">Mi Perfil</h2>
-      <div class="max-w-2xl space-y-6">
-        <div class="bg-slate-800/50 p-6 rounded-lg border border-slate-700">
-          <h3 class="font-bold mb-4">Información Personal</h3>
-          <div class="space-y-4">
+      <div class="mb-6 flex items-center justify-between">
+        <h2 class="text-3xl font-bold bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent">Mi Perfil</h2>
+        <button (click)="reload()" class="px-3 py-2 rounded-lg border bg-slate-800/60 border-slate-700 text-slate-200 text-sm hover:bg-slate-700/60">
+          Recargar
+        </button>
+      </div>
+
+      <div *ngIf="loading" class="rounded-lg border border-slate-700 bg-slate-800/50 p-4 text-slate-300 mb-4">
+        Cargando perfil...
+      </div>
+
+      <div *ngIf="errorMessage" class="rounded-lg border border-red-500/40 bg-red-500/10 p-4 text-red-200 mb-4">
+        {{ errorMessage }}
+      </div>
+
+      <div *ngIf="profile" class="max-w-4xl grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="xl:col-span-2 bg-slate-800/50 p-6 rounded-lg border border-slate-700">
+          <h3 class="font-bold mb-4 text-lg">Información Personal</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="text-sm text-slate-400">Nombre</label>
-              <p class="font-semibold">Nombre del Usuario</p>
+              <p class="font-semibold">{{ profile.user_name }}</p>
             </div>
             <div>
-              <label class="text-sm text-slate-400">Email</label>
-              <p class="font-semibold">usuario@email.com</p>
+              <label class="text-sm text-slate-400">Email principal</label>
+              <p class="font-semibold">{{ profile.email_address }}</p>
             </div>
             <div>
-              <label class="text-sm text-slate-400">Tipo de Perfil</label>
-              <p class="font-semibold">Entusiasta</p>
+              <label class="text-sm text-slate-400">Email de contacto</label>
+              <p class="font-semibold">{{ profile.contact_email || 'No definido' }}</p>
+            </div>
+            <div>
+              <label class="text-sm text-slate-400">Teléfono</label>
+              <p class="font-semibold">{{ profile.phone || 'No definido' }}</p>
+            </div>
+            <div>
+              <label class="text-sm text-slate-400">Tipo de perfil</label>
+              <p class="font-semibold">{{ getUserTagLabel(profile.user_tag) }}</p>
+            </div>
+            <div>
+              <label class="text-sm text-slate-400">Paddock</label>
+              <p class="font-semibold">{{ profile.paddock?.paddock_name || 'Sin paddock' }}</p>
+            </div>
+            <div class="md:col-span-2">
+              <label class="text-sm text-slate-400">Dirección</label>
+              <p class="font-semibold">{{ profile.address || 'No definida' }}</p>
+            </div>
+            <div>
+              <label class="text-sm text-slate-400">Miembro desde</label>
+              <p class="font-semibold">{{ profile.registration_date ? (profile.registration_date | date:'mediumDate') : 'No disponible' }}</p>
             </div>
           </div>
         </div>
 
-        <div class="bg-slate-800/50 p-6 rounded-lg border border-slate-700">
-          <h3 class="font-bold mb-4">Configuración</h3>
-          <button class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded transition">
-            Notificaciones
-          </button>
-          <button class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded transition">
-            Privacidad
-          </button>
-          <button class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded transition">
-            Apariencia
-          </button>
+        <div class="bg-slate-800/50 p-6 rounded-lg border border-slate-700 space-y-4">
+          <h3 class="font-bold mb-2 text-lg">Resumen</h3>
+          <div class="rounded-lg border border-slate-700 bg-slate-900/40 p-4">
+            <p class="text-sm text-slate-400">Publicaciones</p>
+            <p class="text-2xl font-bold text-slate-100">{{ profile.posts?.length || 0 }}</p>
+          </div>
+          <div class="rounded-lg border border-slate-700 bg-slate-900/40 p-4">
+            <p class="text-sm text-slate-400">Coches en garaje</p>
+            <p class="text-2xl font-bold text-slate-100">{{ profile.garage?.length || 0 }}</p>
+          </div>
+          <div class="rounded-lg border border-slate-700 bg-slate-900/40 p-4">
+            <p class="text-sm text-slate-400">ID de usuario</p>
+            <p class="text-2xl font-bold text-slate-100">#{{ profile.user_id }}</p>
+          </div>
         </div>
       </div>
     </div>
   `,
 })
-export class ProfileComponent {}
+export class ProfileComponent implements OnInit {
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+
+  loading = true;
+  errorMessage = '';
+  profile: ProfileDetail | null = null;
+
+  ngOnInit(): void {
+    this.loadProfile();
+  }
+
+  reload(): void {
+    this.loadProfile();
+  }
+
+  getUserTagLabel(tag?: string): string {
+    const labels: Record<string, string> = {
+      admin: 'Administrador',
+      pro: 'Profesional',
+      indv: 'Individual',
+      tuning: 'Tuner',
+      press: 'Prensa',
+    };
+
+    return tag ? (labels[tag] || tag) : 'Sin definir';
+  }
+
+  private loadProfile(): void {
+    this.loading = true;
+    this.errorMessage = '';
+
+    this.authService.getCurrentUser().subscribe({
+      next: (user) => {
+        if (!user) {
+          this.errorMessage = 'No hay usuario autenticado.';
+          this.loading = false;
+          return;
+        }
+
+        this.http.get<ProfileDetail>(`${API_CONFIG.BASE_URL}/users/${user.user_id}`).subscribe({
+          next: (profile) => {
+            this.profile = profile;
+            this.loading = false;
+          },
+          error: () => {
+            this.errorMessage = 'No se pudo cargar la información del perfil.';
+            this.loading = false;
+          },
+        });
+      },
+      error: () => {
+        this.errorMessage = 'No se pudo resolver el usuario actual.';
+        this.loading = false;
+      },
+    });
+  }
+}
