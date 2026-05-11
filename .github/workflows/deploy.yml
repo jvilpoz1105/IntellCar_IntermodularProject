@@ -3,6 +3,7 @@ name: 🚀 Deploy IntellCar to AWS
 on:
   push:
     branches: [ "main" ] # Se dispara cada vez que se hace push a main
+  workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
@@ -77,7 +78,7 @@ jobs:
             if [ -d "/home/ubuntu/intellcar-project/.git" ]; then
               cd /home/ubuntu/intellcar-project
               git fetch origin main
-              git reset --hard origin/main
+              git reset --hard origin/jose
             else
               git clone https://github.com/${{ github.repository }}.git /home/ubuntu/intellcar-project
               cd /home/ubuntu/intellcar-project
