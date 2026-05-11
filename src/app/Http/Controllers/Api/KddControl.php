@@ -7,10 +7,12 @@ use App\Filters\KddEventFilter;
 use App\Models\EventKdd;
 use App\Http\Resources\Api\KddEventResource;
 use App\Http\Resources\Api\KddEventSummaryResource;
+use App\Traits\ModeratesContent;
 use Illuminate\Http\Request;
 
 class KddControl extends Controller
 {
+    use ModeratesContent;
     /**
      * Obtener listado general con filtros opcionales.
      *
@@ -62,6 +64,51 @@ class KddControl extends Controller
         $event = EventKdd::with(['creator', 'paddock', 'attendees'])->findOrFail($id);
         
         return new KddEventResource($event);
+    }
+
+    /**
+     * Crear un nuevo evento/quedada.
+     */
+    public function store(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'title'             => 'required|string|max:150',
+            'event_description' => 'required|string',
+            'event_date'        => 'required|date|after:now',
+            'location_name'     => 'nullable|string|max:255',
+            'address'           => 'nullable|string|max:255',
+            'city'              => 'nullable|string|max:100',
+            'latitude'          => 'nullable|numeric|between:-90,90',
+            'longitude'         => 'nullable|numeric|between:-180,180',
+            'max_participants'  => 'nullable|integer|min:0',
+            'paddock_id'        => 'required|exists:paddock,paddock_id',
+            'ai_metadata'       => 'nullable|array',
+            'media'             => 'nullable|array',
+            'media.*'           => 'string'
+        ]);
+
+        // --- COMPROBACIÓN EXTRA DE SEGURIDAD (Moderación) ---
+        if (!empty($validated['media'])) {
+            if (!$this->validateModeration($validated['media'])) {
+                return response()->json([
+                    'message' => 'Una o más imágenes contienen contenido inapropiado y no pueden ser publicadas.'
+                ], 422);
+            }
+        }
+
+        $event = EventKdd::create([
+            ...$validated,
+            'creator_id' => $user->user_id,
+            'visible'    => true,
+            'ai_metadata' => $validated['ai_metadata'] ?? null,
+        ]);
+
+        return response()->json([
+            'message' => 'Evento creado exitosamente',
+            'event'   => $event->load(['creator', 'paddock']),
+        ], 201);
     }
 
     /**

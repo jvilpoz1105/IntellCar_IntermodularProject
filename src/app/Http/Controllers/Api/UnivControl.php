@@ -7,10 +7,12 @@ use App\Filters\PostFilter;
 use App\Models\Post;
 use App\Http\Resources\Api\UnivPostResource;
 use App\Http\Resources\Api\UnivPostSummaryResource;
+use App\Traits\ModeratesContent;
 use Illuminate\Http\Request;
 
 class UnivControl extends Controller
 {
+    use ModeratesContent;
     /**
      * Obtener listado general con filtros opcionales.
      *
@@ -101,6 +103,58 @@ class UnivControl extends Controller
             ->findOrFail($id);
         
         return new UnivPostResource($post);
+    }
+
+    /**
+     * Crear un nuevo post.
+     */
+    public function store(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'title'     => 'nullable|string|max:150',
+            'content'   => 'required|string',
+            'model_id'  => 'nullable|exists:car_model,model_id',
+            'engine_id' => 'nullable|exists:car_engine,engine_id',
+            'ai_metadata' => 'nullable|array',
+            'media'     => 'nullable|array',
+            'media.*'   => 'string'
+        ]);
+
+        // --- COMPROBACIÓN EXTRA DE SEGURIDAD (Moderación) ---
+        if (!empty($validated['media'])) {
+            if (!$this->validateModeration($validated['media'])) {
+                return response()->json([
+                    'message' => 'Una o más imágenes contienen contenido inapropiado y no pueden ser publicadas.'
+                ], 422);
+            }
+        }
+
+        $post = Post::create([
+            'title'     => $validated['title'] ?? null,
+            'content'   => $validated['content'],
+            'model_id'  => $validated['model_id'] ?? null,
+            'engine_id' => $validated['engine_id'] ?? null,
+            'author_id' => $user->user_id,
+            'visible'   => true,
+            'ai_metadata' => $validated['ai_metadata'] ?? null,
+        ]);
+
+        // Guardar las referencias de multimedia (ya subidas a S3 desde el front)
+        if ($request->has('media')) {
+            foreach ($request->input('media') as $mediaUrl) {
+                $post->media()->create([
+                    'media_url'  => $mediaUrl,
+                    'media_type' => 'image'
+                ]);
+            }
+        }
+
+        return response()->json([
+            'message' => 'Post creado exitosamente',
+            'post'    => $post->load(['author', 'model.make', 'media']),
+        ], 201);
     }
 
     /**

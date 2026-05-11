@@ -13,3 +13,21 @@ variable "ssh_key_name" {
   description = "Nombre de la clave .pem que creaste en la consola de AWS"
   type        = string
 }
+
+variable "lambda_role_arn" {
+  description = "ARN del rol IAM para Lambda (LabRole en Learner Lab)"
+  type        = string
+  default     = "arn:aws:iam::*:role/LabRole"
+}
+
+variable "api_domain" {
+  description = "Dominio de la API Laravel"
+  type        = string
+  default     = "api.intellcar.com"
+}
+
+variable "internal_api_token" {
+  description = "Token para comunicación interna Lambda -> Laravel"
+  type        = string
+  sensitive   = true
+}

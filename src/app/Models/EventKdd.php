@@ -26,6 +26,7 @@ class EventKdd extends Model
         'max_participants',
         'onDeleteRequest',
         'visible',
+        'ai_metadata',
     ];
 
     protected $casts = [
@@ -36,6 +37,7 @@ class EventKdd extends Model
         'longitude' => 'decimal:8',
         'onDeleteRequest' => 'datetime',
         'visible' => 'boolean',
+        'ai_metadata' => 'array',
     ];
 
     /**

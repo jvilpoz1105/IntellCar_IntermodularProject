@@ -27,6 +27,7 @@ class CarAdvert extends Model
         'engine_id',
         'seller_id',
         'onDeleteRequest',
+        'ai_metadata',
     ];
 
     protected $casts = [
@@ -34,6 +35,7 @@ class CarAdvert extends Model
         'visible' => 'boolean',
         'publish_date' => 'datetime',
         'onDeleteRequest' => 'datetime',
+        'ai_metadata' => 'array',
     ];
 
     /**

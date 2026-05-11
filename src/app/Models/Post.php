@@ -20,6 +20,7 @@ class Post extends Model
         'engine_id',
         'onDeleteRequest',
         'visible',
+        'ai_metadata',
     ];
 
     protected $casts = [
@@ -27,6 +28,7 @@ class Post extends Model
         'updated_at' => 'datetime',
         'onDeleteRequest' => 'datetime',
         'visible' => 'boolean',
+        'ai_metadata' => 'array',
     ];
 
     /**

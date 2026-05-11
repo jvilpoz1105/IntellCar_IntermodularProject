@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\MarketControl;
 use App\Http\Controllers\Api\UnivControl;
 use App\Http\Controllers\Api\KddControl;
 use App\Http\Controllers\Api\ProfileControl;
+use App\Http\Controllers\Api\RekoControl;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,12 @@ Route::get('/social/{id}', [UnivControl::class, 'show']);
 // Eventos (Kdds)
 Route::get('/kdds', [KddControl::class, 'index']);
 Route::get('/kdds/{id}', [KddControl::class, 'show']);
+
+// Media - Presigned URL (público para obtener URL de subida)
+Route::post('/media/presigned', [RekoControl::class, 'presigned']);
+
+// Internal - Endpoint para Lambda
+Route::patch('/internal/media-verify', [RekoControl::class, 'internalVerify']);
 
 
 // --- RUTAS PROTEGIDAS (Requieren Token) ---
@@ -69,6 +76,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/garage/{id}', [ProfileControl::class, 'updateGarageItem']); 
     Route::delete('/profile/garage/{id}', [ProfileControl::class, 'removeGarageItem']);
     
+    // --- CREACIÓN DE CONTENIDO (Protegido y con límites) ---
+    Route::post('/market', [MarketControl::class, 'store']);
+    Route::post('/social', [UnivControl::class, 'store']);
+    Route::post('/kdds', [KddControl::class, 'store']);
+
     // Borrar un usuario (Solo Admin)
     Route::delete('/users/{id}', [ProfileControl::class, 'destroy'])->middleware('role:admin');
 
@@ -92,5 +104,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/market/{id}', [MarketControl::class, 'destroy'])->middleware('role:admin');
     Route::delete('/social/{id}', [UnivControl::class, 'destroy'])->middleware('role:admin');
     Route::delete('/kdds/{id}', [KddControl::class, 'destroy'])->middleware('role:admin');
+
+    // --- MEDIA AI ANALYSIS (Rekognition) ---
+    Route::post('/media/analyze', [RekoControl::class, 'analyze']);
 
 });

@@ -7,10 +7,12 @@ use App\Filters\CarAdvertFilter;
 use App\Models\CarAdvert;
 use App\Http\Resources\Api\MarketAdvertResource;
 use App\Http\Resources\Api\MarketAdvertSummaryResource;
+use App\Traits\ModeratesContent;
 use Illuminate\Http\Request;
 
 class MarketControl extends Controller
 {
+    use ModeratesContent;
     /**
      * Obtener listado general con filtros opcionales.
      *
@@ -104,6 +106,82 @@ class MarketControl extends Controller
         $advert = CarAdvert::with(['model.make', 'engine', 'seller', 'media', 'moods'])->findOrFail($id);
         
         return new MarketAdvertResource($advert);
+    }
+
+    /**
+     * Crear un nuevo anuncio.
+     */
+    public function store(Request $request)
+    {
+        $user = $request->user();
+
+        // Verificar límite para usuarios no pro/admin (máximo 3)
+        if (!in_array($user->user_tag, ['pro', 'admin'])) {
+            $count = CarAdvert::where('seller_id', $user->user_id)->count();
+            if ($count >= 3) {
+                return response()->json([
+                    'message' => 'Límite de anuncios alcanzado (Máximo 3 para usuarios individuales). ¡Pásate a Pro!'
+                ], 403);
+            }
+        }
+
+        $validated = $request->validate([
+            'ad_title'         => 'required|string|max:165',
+            'ad_type'          => 'required|in:new,km0,used,renting,leasing,supcription',
+            'ad_details'       => 'nullable|string',
+            'price'            => 'required|numeric|min:0',
+            'kilometers'       => 'nullable|integer|min:0',
+            'car_color'        => 'required|in:blanco,negro,gris,plata,rojo,azul,verde,amarillo,naranja,otro',
+            'year_manufacture' => 'nullable|integer|min:1900|max:' . (date('Y') + 1),
+            'region'           => 'required|string|max:100',
+            'city'             => 'required|string|max:100',
+            'model_id'         => 'required|exists:car_model,model_id',
+            'engine_id'        => 'required|exists:car_engine,engine_id',
+            'ai_metadata'      => 'nullable|array',
+            'media'            => 'nullable|array',
+            'media.*'          => 'string'
+        ]);
+
+        // --- COMPROBACIÓN EXTRA DE SEGURIDAD (Moderación) ---
+        if (!empty($validated['media'])) {
+            if (!$this->validateModeration($validated['media'])) {
+                return response()->json([
+                    'message' => 'Una o más imágenes contienen contenido inapropiado y no pueden ser publicadas.'
+                ], 422);
+            }
+        }
+
+        $advert = CarAdvert::create([
+            'ad_title'         => $validated['ad_title'],
+            'ad_type'          => $validated['ad_type'],
+            'ad_details'       => $validated['ad_details'] ?? null,
+            'price'            => $validated['price'],
+            'kilometers'       => $validated['kilometers'] ?? null,
+            'car_color'        => $validated['car_color'],
+            'year_manufacture' => $validated['year_manufacture'] ?? null,
+            'region'           => $validated['region'],
+            'city'             => $validated['city'],
+            'model_id'         => $validated['model_id'],
+            'engine_id'        => $validated['engine_id'],
+            'seller_id'        => $user->user_id,
+            'visible'          => true,
+            'ai_metadata'      => $validated['ai_metadata'] ?? null,
+        ]);
+
+        // Guardar las referencias de multimedia (ya subidas a S3 desde el front)
+        if ($request->has('media')) {
+            foreach ($request->input('media') as $mediaUrl) {
+                $advert->media()->create([
+                    'media_url'  => $mediaUrl,
+                    'media_type' => 'image'
+                ]);
+            }
+        }
+
+        return response()->json([
+            'message' => 'Anuncio creado exitosamente',
+            'advert'  => $advert->load(['model.make', 'engine', 'media']),
+        ], 201);
     }
 
     /**
