@@ -19,9 +19,9 @@
     @endphp
 
     @foreach ($cards as $card)
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 flex flex-col gap-1">
-        <span class="text-2xl font-bold text-gray-900 dark:text-white">{{ $card['value'] }}</span>
-        <span class="text-xs text-gray-500 dark:text-gray-400">{{ $card['label'] }}</span>
+    <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 flex flex-col gap-1">
+        <span class="text-2xl font-bold text-slate-100">{{ $card['value'] }}</span>
+        <span class="text-xs text-slate-500">{{ $card['label'] }}</span>
     </div>
     @endforeach
 </div>
@@ -30,54 +30,54 @@
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
     {{-- Últimos usuarios --}}
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-            <h2 class="font-semibold text-sm">Últimos usuarios registrados</h2>
-            <a href="{{ route('admin.users.index') }}" class="text-xs text-blue-600 hover:underline">Ver todos</a>
+    <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-700">
+            <h2 class="font-semibold text-sm text-slate-200">Últimos usuarios registrados</h2>
+            <a href="{{ route('admin.users.index') }}" class="text-xs text-orange-400 hover:text-orange-300">Ver todos →</a>
         </div>
-        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+        <div class="divide-y divide-slate-700">
             @forelse ($latest_users as $user)
             <div class="flex items-center justify-between px-6 py-3">
                 <div>
-                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $user->user_name }}</p>
-                    <p class="text-xs text-gray-500">{{ $user->email_address }}</p>
+                    <p class="text-sm font-medium text-slate-200">{{ $user->user_name }}</p>
+                    <p class="text-xs text-slate-500">{{ $user->email_address }}</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="text-xs px-2 py-0.5 rounded-full
-                        {{ $user->user_tag === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600' }}">
+                        {{ $user->user_tag === 'admin' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'bg-slate-700 text-slate-400' }}">
                         {{ $user->user_tag }}
                     </span>
-                    <span class="w-2 h-2 rounded-full {{ $user->is_active ? 'bg-green-400' : 'bg-red-400' }}"></span>
+                    <span class="w-2 h-2 rounded-full {{ $user->is_active ? 'bg-emerald-400' : 'bg-red-400' }}"></span>
                 </div>
             </div>
             @empty
-            <p class="px-6 py-4 text-sm text-gray-500">Sin usuarios registrados aún.</p>
+            <p class="px-6 py-4 text-sm text-slate-500">Sin usuarios registrados aún.</p>
             @endforelse
         </div>
     </div>
 
     {{-- Últimos anuncios --}}
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-            <h2 class="font-semibold text-sm">Últimos anuncios publicados</h2>
-            <a href="{{ route('admin.adverts.index') }}" class="text-xs text-blue-600 hover:underline">Ver todos</a>
+    <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-700">
+            <h2 class="font-semibold text-sm text-slate-200">Últimos anuncios publicados</h2>
+            <a href="{{ route('admin.adverts.index') }}" class="text-xs text-orange-400 hover:text-orange-300">Ver todos →</a>
         </div>
-        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+        <div class="divide-y divide-slate-700">
             @forelse ($latest_adverts as $advert)
             <div class="flex items-center justify-between px-6 py-3">
                 <div>
-                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[200px]">{{ $advert->ad_title }}</p>
-                    <p class="text-xs text-gray-500">{{ $advert->seller?->user_name ?? '—' }}</p>
+                    <p class="text-sm font-medium text-slate-200 truncate max-w-[200px]">{{ $advert->ad_title }}</p>
+                    <p class="text-xs text-slate-500">{{ $advert->seller?->user_name ?? '—' }}</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    <span class="text-xs font-semibold text-slate-300">
                         {{ number_format($advert->price, 0, ',', '.') }} €
                     </span>
-                    <span class="w-2 h-2 rounded-full {{ $advert->visible ? 'bg-green-400' : 'bg-gray-400' }}"></span>
+                    <span class="w-2 h-2 rounded-full {{ $advert->visible ? 'bg-emerald-400' : 'bg-slate-600' }}"></span>
                 </div>
             </div>
             @empty
-            <p class="px-6 py-4 text-sm text-gray-500">Sin anuncios registrados aún.</p>
+            <p class="px-6 py-4 text-sm text-slate-500">Sin anuncios registrados aún.</p>
             @endforelse
         </div>
     </div>

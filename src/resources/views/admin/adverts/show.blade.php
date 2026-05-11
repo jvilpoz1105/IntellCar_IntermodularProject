@@ -5,7 +5,7 @@
 @section('content')
 
 <div class="mb-4">
-    <a href="{{ route('admin.adverts.index') }}" class="text-sm text-blue-600 hover:underline">← Volver a anuncios</a>
+    <a href="{{ route('admin.adverts.index') }}" class="text-sm text-orange-400 hover:text-orange-300">← Volver a anuncios</a>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -60,17 +60,17 @@
             </dl>
 
             @if ($advert->ad_details)
-            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                <p class="text-xs text-gray-500 uppercase mb-1">Descripción</p>
-                <p class="text-sm text-gray-700 dark:text-gray-300">{{ $advert->ad_details }}</p>
+            <div class="mt-4 pt-4 border-t border-slate-700">
+                <p class="text-xs text-slate-500 uppercase mb-1 tracking-wider">Descripción</p>
+                <p class="text-sm text-slate-300">{{ $advert->ad_details }}</p>
             </div>
             @endif
         </div>
 
         {{-- Media --}}
         @if ($advert->media && $advert->media->isNotEmpty())
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-            <h3 class="text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">Imágenes ({{ $advert->media->count() }})</h3>
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-6">
+            <h3 class="text-sm font-semibold mb-3 text-slate-400 uppercase tracking-wider">Imágenes ({{ $advert->media->count() }})</h3>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 @foreach ($advert->media as $media)
                 <img src="{{ asset('storage/' . $media->file_path) }}"
@@ -85,32 +85,32 @@
     <div class="space-y-4">
 
         {{-- Vendedor --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Vendedor</h3>
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-6">
+            <h3 class="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider">Vendedor</h3>
             @if ($advert->seller)
                 <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500">
+                    <div class="w-10 h-10 rounded-full bg-orange-500/20 border border-orange-500/30 flex items-center justify-center font-bold text-orange-400">
                         {{ strtoupper(substr($advert->seller->user_name, 0, 1)) }}
                     </div>
                     <div>
-                        <p class="font-medium text-sm text-gray-900 dark:text-white">{{ $advert->seller->user_name }}</p>
-                        <p class="text-xs text-gray-500">{{ $advert->seller->email_address }}</p>
+                        <p class="font-medium text-sm text-slate-200">{{ $advert->seller->user_name }}</p>
+                        <p class="text-xs text-slate-500">{{ $advert->seller->email_address }}</p>
                     </div>
                 </div>
                 <a href="{{ route('admin.users.show', $advert->seller->user_id) }}"
-                   class="text-xs text-blue-600 hover:underline">Ver perfil del vendedor →</a>
+                   class="text-xs text-orange-400 hover:text-orange-300">Ver perfil del vendedor →</a>
             @else
-                <p class="text-sm text-gray-500">Vendedor eliminado</p>
+                <p class="text-sm text-slate-500">Vendedor eliminado</p>
             @endif
         </div>
 
         {{-- Estado + acciones --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 space-y-3">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Estado y acciones</h3>
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 space-y-3">
+            <h3 class="text-sm font-semibold text-slate-400 mb-2 uppercase tracking-wider">Estado y acciones</h3>
 
             <div class="flex items-center justify-between text-sm">
-                <span class="text-gray-500">Visibilidad</span>
-                <span class="{{ $advert->visible ? 'text-green-600 font-medium' : 'text-gray-400' }}">
+                <span class="text-slate-500">Visibilidad</span>
+                <span class="{{ $advert->visible ? 'text-emerald-400 font-medium' : 'text-slate-500' }}">
                     {{ $advert->visible ? 'Visible' : 'Oculto' }}
                 </span>
             </div>
@@ -120,8 +120,8 @@
                 <button type="submit"
                         class="w-full py-2 text-sm font-medium rounded-lg transition
                                {{ $advert->visible
-                                  ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                                  : 'bg-green-100 text-green-700 hover:bg-green-200' }}">
+                                  ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20'
+                                  : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20' }}">
                     {{ $advert->visible ? '🙈 Ocultar anuncio' : '👁 Hacer visible' }}
                 </button>
             </form>
@@ -130,7 +130,7 @@
                   onsubmit="return confirm('¿Eliminar este anuncio definitivamente?')">
                 @csrf @method('DELETE')
                 <button type="submit"
-                        class="w-full py-2 text-sm font-medium rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition">
+                        class="w-full py-2 text-sm font-medium rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition">
                     🗑 Eliminar anuncio
                 </button>
             </form>

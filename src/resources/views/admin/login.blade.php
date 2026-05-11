@@ -8,25 +8,26 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="font-sans antialiased bg-gray-900 flex items-center justify-center min-h-screen">
+<body class="font-sans antialiased bg-slate-950 flex items-center justify-center min-h-screen">
 
-    <div class="w-full max-w-md px-6 py-8 bg-gray-800 rounded-2xl shadow-xl">
+    <div class="w-full max-w-md px-6 py-8 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
 
         {{-- Logo --}}
         <div class="text-center mb-8">
-            <span class="text-3xl font-bold text-white">🚗 IntellCar</span>
-            <p class="mt-2 text-sm text-gray-400">Panel de Administración</p>
+            <span class="text-2xl font-bold text-white tracking-tight">IntellCar</span>
+            <span class="ml-2 text-xs bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full uppercase font-semibold tracking-wider">Admin</span>
+            <p class="mt-3 text-sm text-slate-500">Panel de Administración</p>
         </div>
 
         {{-- Errores --}}
         @if ($errors->any())
-            <div class="mb-4 bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg text-sm">
+            <div class="mb-4 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
                 {{ $errors->first() }}
             </div>
         @endif
 
         @if (session('error'))
-            <div class="mb-4 bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg text-sm">
+            <div class="mb-4 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
                 {{ session('error') }}
             </div>
         @endif
@@ -36,7 +37,7 @@
             @csrf
 
             <div>
-                <label for="email_address" class="block text-sm font-medium text-gray-300 mb-1">
+                <label for="email_address" class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">
                     Correo electrónico
                 </label>
                 <input
@@ -47,14 +48,15 @@
                     required
                     autofocus
                     autocomplete="username"
-                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg
-                           focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
+                    class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-slate-100 rounded-lg
+                           focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50
+                           placeholder-slate-600 text-sm"
                     placeholder="admin@intellcar.com"
                 />
             </div>
 
             <div>
-                <label for="user_password" class="block text-sm font-medium text-gray-300 mb-1">
+                <label for="user_password" class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">
                     Contraseña
                 </label>
                 <input
@@ -63,19 +65,13 @@
                     name="user_password"
                     required
                     autocomplete="current-password"
-                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-slate-100 rounded-lg
+                           focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 text-sm"
                 />
             </div>
 
-            <div class="flex items-center">
-                <input id="remember" type="checkbox" name="remember"
-                       class="w-4 h-4 rounded border-gray-600 bg-gray-700 text-blue-500">
-                <label for="remember" class="ml-2 text-sm text-gray-300">Recordarme</label>
-            </div>
-
             <button type="submit"
-                    class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition">
+                    class="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition text-sm">
                 Entrar al panel
             </button>
         </form>

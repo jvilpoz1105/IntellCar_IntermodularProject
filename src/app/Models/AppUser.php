@@ -47,6 +47,15 @@ class AppUser extends Authenticatable
     }
 
     /**
+     * La tabla app_user no tiene columna remember_token.
+     * Devolver cadena vacía deshabilita la funcionalidad.
+     */
+    public function getRememberTokenName(): string
+    {
+        return '';
+    }
+
+    /**
      * Relaciones
      */
     public function paddock()
