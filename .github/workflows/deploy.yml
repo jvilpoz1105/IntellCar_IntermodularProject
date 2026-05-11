@@ -2,7 +2,7 @@ name: 🚀 Deploy IntellCar to AWS
 
 on:
   push:
-    branches: [ "main" ] # Se dispara cada vez que se hace push a main
+    branches: [ "main", "jose" ] # Se dispara en push a main o jose
   workflow_dispatch:
 
 env:
