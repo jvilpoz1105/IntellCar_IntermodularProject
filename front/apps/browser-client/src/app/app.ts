@@ -12,6 +12,8 @@ import {
 } from '@spartan-ng/helm/card';
 import { animate, spring } from 'motion';
 import { gsap } from 'gsap';
+import { PublishModalComponent } from './features/publish/publish-modal/publish-modal.component';
+import { CommonModule } from '@angular/common';
 
 @Component({
 	selector: 'app-root',
@@ -26,12 +28,15 @@ import { gsap } from 'gsap';
 		HlmCardFooter,
 		HlmCardHeader,
 		HlmCardTitle,
+		PublishModalComponent,
+		CommonModule
 	],
 	templateUrl: './app.html',
 	styleUrl: './app.css',
 })
 export class App {
 	protected readonly title = signal('browser-client');
+	protected readonly isPublishModalOpen = signal(false);
 
 	constructor() {
 		afterNextRender(() => {
@@ -64,5 +69,9 @@ export class App {
 				{ delay: 0.5, duration: 0.5 }
 			);
 		});
+	}
+
+	togglePublishModal() {
+		this.isPublishModalOpen.update(v => !v);
 	}
 }

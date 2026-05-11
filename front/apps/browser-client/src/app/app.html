@@ -29,9 +29,14 @@
 				Tu nuevo punto de encuentro definitivo para los amantes del motor está cobrando forma.
 			</p>
 			
-			<div class="flex gap-4 justify-center">
-				<button hlmBtn size="lg" class="px-8 shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
-					Comenzar Ruta
+			<div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+				<button 
+          hlmBtn size="lg" 
+          (click)="togglePublishModal()"
+          class="px-8 bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/40 hover:scale-105 transition-transform group"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 group-hover:rotate-90 transition-transform"><path d="M5 12h14m-7-7v14"/></svg>
+					Publicar Anuncio
 				</button>
 				<button hlmBtn variant="outline" size="lg" class="px-8 backdrop-blur-sm border-muted-foreground/20 hover:bg-muted/50">
 					Saber Más
@@ -45,5 +50,11 @@
 		</div>
 	</section>
 </main>
+
+<app-publish-modal 
+  *ngIf="isPublishModalOpen()" 
+  type="market" 
+  (close)="togglePublishModal()"
+></app-publish-modal>
 
 <router-outlet />

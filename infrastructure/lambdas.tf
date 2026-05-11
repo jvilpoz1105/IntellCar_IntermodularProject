@@ -1,12 +1,13 @@
-# Lambda Function para análisis de imágenes con Rekognition
-# Trigger: S3 ObjectCreated (cuando se sube una imagen)
-# IMPORTANTE: Usa el LabRole existente del Learner Lab en lugar de crear uno nuevo
+# Obtener automáticamente el ARN del rol LabRole de Learner Lab
+data "aws_iam_role" "lab_role" {
+  name = "LabRole"
+}
 
 # Lambda Function - Python 3.11
 resource "aws_lambda_function" "s3_rekognition_trigger" {
   filename      = "lambda/s3_trigger.zip"
   function_name = "intellcar-s3-trigger"
-  role          = var.lambda_role_arn
+  role          = data.aws_iam_role.lab_role.arn
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.11"
   timeout       = 30

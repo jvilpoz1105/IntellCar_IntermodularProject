@@ -14,11 +14,6 @@ variable "ssh_key_name" {
   type        = string
 }
 
-variable "lambda_role_arn" {
-  description = "ARN del rol IAM para Lambda (LabRole en Learner Lab)"
-  type        = string
-  default     = "arn:aws:iam::*:role/LabRole"
-}
 
 variable "api_domain" {
   description = "Dominio de la API Laravel"
