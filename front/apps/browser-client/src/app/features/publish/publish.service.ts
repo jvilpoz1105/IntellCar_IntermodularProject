@@ -7,6 +7,8 @@ import { firstValueFrom } from 'rxjs';
   providedIn: 'root'
 })
 export class PublishService {
+  // Configuración de la API (Usando tu IP de EC2)
+  private readonly API_BASE = 'http://54.85.47.119/api';
   private mediaItems = signal<UploadedMedia[]>([]);
 
   // Selectors
@@ -19,44 +21,55 @@ export class PublishService {
   async addFiles(files: FileList) {
     const newItems: UploadedMedia[] = Array.from(files).map(file => ({
       id: Math.random().toString(36).substring(2, 9),
-      url: URL.createObjectURL(file), // Local preview
+      url: URL.createObjectURL(file),
       status: 'pending' as const
     }));
 
     this.mediaItems.update(prev => [...prev, ...newItems]);
 
-    // Process each file
     for (let i = 0; i < newItems.length; i++) {
-      this.processUpload(newItems[i], Array.from(files)[i]);
+      this.processRealUpload(newItems[i], Array.from(files)[i]);
     }
   }
 
-  private async processUpload(item: UploadedMedia, file: File) {
-    // 1. Upload to S3 (Simulated or via existing service)
-    this.updateStatus(item.id, 'uploading');
-    
+  private async processRealUpload(item: UploadedMedia, file: File) {
     try {
-      // AQUÍ IRÍA LA LLAMADA AL S3UploadService
-      // Por ahora simulamos un tiempo de subida
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // 2. Analyze with AI
-      this.updateStatus(item.id, 'analyzing');
-      
-      // Llamada real a la API de Laravel
-      const response: any = await firstValueFrom(
-        this.http.post('/api/media/analyze', { key: 'fake-key-' + item.id })
+      // 1. Obtener URL firmada de S3 desde nuestra API
+      this.updateStatus(item.id, 'uploading');
+      const presigned: any = await firstValueFrom(
+        this.http.post(`${this.API_BASE}/media/presigned`, {
+          filename: file.name,
+          content_type: file.type
+        })
       );
 
+      // 2. Subir el archivo directamente a S3
+      await firstValueFrom(
+        this.http.put(presigned.upload_url, file, {
+          headers: { 'Content-Type': file.type }
+        })
+      );
+
+      // 3. Notificar a la API para que analice con Rekognition
+      this.updateStatus(item.id, 'analyzing');
+      const analysis: any = await firstValueFrom(
+        this.http.post(`${this.API_BASE}/media/analyze`, { key: presigned.key })
+      );
+
+      // 4. Actualizar con los resultados de la IA
       this.mediaItems.update(prev => prev.map(i => 
         i.id === item.id 
-          ? { ...i, status: 'success', labels: response.labels?.map((l: any) => l.Name) } 
+          ? { 
+              ...i, 
+              status: 'success', 
+              labels: analysis.all_labels?.map((l: any) => l.name) 
+            } 
           : i
       ));
 
     } catch (error: any) {
       this.updateStatus(item.id, 'error');
-      console.error('Error processing media:', error);
+      console.error('Error en el flujo de subida:', error);
     }
   }
 

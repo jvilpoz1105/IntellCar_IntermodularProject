@@ -104,8 +104,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/market/{id}', [MarketControl::class, 'destroy'])->middleware('role:admin');
     Route::delete('/social/{id}', [UnivControl::class, 'destroy'])->middleware('role:admin');
     Route::delete('/kdds/{id}', [KddControl::class, 'destroy'])->middleware('role:admin');
-
-    // --- MEDIA AI ANALYSIS (Rekognition) ---
-    Route::post('/media/analyze', [RekoControl::class, 'analyze']);
-
 });
+
+// --- MEDIA AI ANALYSIS (Rekognition) - Público para pruebas ---
+Route::post('/media/analyze', [RekoControl::class, 'analyze']);
