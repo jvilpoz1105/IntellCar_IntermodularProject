@@ -3,7 +3,7 @@ data "aws_iam_role" "lab_role" {
   name = "LabRole"
 }
 
-# Lambda Function - Python 3.11
+# Lambda Function - Python 3.11 -- AWS Rekognition
 resource "aws_lambda_function" "s3_rekognition_trigger" {
   filename      = "lambda/s3_trigger.zip"
   function_name = "intellcar-s3-trigger"
