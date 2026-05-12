@@ -157,17 +157,33 @@ class RekoControl extends Controller
             ], 422);
         }
 
+        // 3. Detectar Etiquetas (Objetos, Marcas, Colores)
         $labelsResult = $this->rekognitionClient->detectLabels([
             'Image' => ['S3Object' => ['Bucket' => $this->bucket, 'Name' => $key]],
             'MaxLabels' => 50,
-            'MinConfidence' => 70,
+            'MinConfidence' => 65, // Bajamos un poco para captar más detalles
+        ]);
+
+        // 4. NUEVO: Detectar Texto (Para insignias, logos y modelos escritos)
+        $textResult = $this->rekognitionClient->detectText([
+            'Image' => ['S3Object' => ['Bucket' => $this->bucket, 'Name' => $key]],
         ]);
 
         $labels = $labelsResult['Labels'] ?? [];
+        $texts = $textResult['TextDetections'] ?? [];
+        
         $vehicleLabels = [];
         $colorLabels = [];
         $brandLabels = [];
         $otherLabels = [];
+        $detectedTexts = [];
+
+        // Procesar Texto Detectado
+        foreach ($texts as $text) {
+            if ($text['Type'] === 'WORD' && $text['Confidence'] > 80) {
+                $detectedTexts[] = $text['DetectedText'];
+            }
+        }
 
         foreach ($labels as $label) {
             $name = strtolower($label['Name']);
@@ -189,16 +205,8 @@ class RekoControl extends Controller
                 continue;
             }
 
-            $makes = Make::where('status', 'active')->pluck('make_name')->map(fn($m) => strtolower($m))->toArray();
-            if (in_array($name, $makes)) {
-                $brandLabels[] = [
-                    'name' => $label['Name'],
-                    'confidence' => $label['Confidence'],
-                ];
-                continue;
-            }
-
-            $otherLabels[] = [
+            // Si la IA detecta una marca como etiqueta directa
+            $brandLabels[] = [
                 'name' => $label['Name'],
                 'confidence' => $label['Confidence'],
             ];
@@ -206,13 +214,15 @@ class RekoControl extends Controller
 
         if (empty($vehicleLabels)) {
             return response()->json([
-                'error' => 'No vehicle detected in image',
+                'error' => 'No se detectó un vehículo válido en la imagen',
+                'labels_found' => array_column($labels, 'Name')
             ], 422);
         }
 
         $detectedMake = null;
         $detectedModel = null;
 
+        // Intentar emparejar marca con la base de datos
         if (!empty($brandLabels)) {
             $brandName = $brandLabels[0]['name'];
             $make = Make::whereRaw('LOWER(make_name) = ?', [strtolower($brandName)])->first();
@@ -237,12 +247,12 @@ class RekoControl extends Controller
 
         return response()->json([
             'vehicle_detected' => true,
-            'vehicle_labels' => $vehicleLabels,
+            'vehicle_type' => $vehicleLabels[0]['name'] ?? 'Car',
             'color' => !empty($colorLabels) ? $colorLabels[0] : null,
             'make' => $detectedMake,
             'model' => $detectedModel,
-            'other_labels' => array_slice($otherLabels, 0, 10),
-            'all_labels' => array_map(fn($l) => ['name' => $l['Name'], 'confidence' => $l['Confidence']], $labels),
+            'detected_text' => $detectedTexts, // ¡Aquí saldrá el texto de las insignias!
+            'all_labels' => array_slice(array_map(fn($l) => ['name' => $l['Name'], 'confidence' => $l['Confidence']], $labels), 0, 15),
         ]);
     }
 
