@@ -72,10 +72,15 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 1. Limpiar directorio completo (incluyendo archivos ocultos)
-            rm -rf /home/ubuntu/intellcar-project
+            # 1. Detener contenedores actuales si existen para liberar los volúmenes
+            if [ -d "/home/ubuntu/intellcar-project" ]; then
+              cd /home/ubuntu/intellcar-project
+              docker-compose -f docker-compose.prod.yml down || true
+              cd ..
+            fi
 
-            # ── 2. Clonar el repositorio (rama jose) ──
+            # 2. Limpiar y Clonar rama jose
+            rm -rf /home/ubuntu/intellcar-project
             git clone -b jose https://github.com/${{ github.repository }}.git /home/ubuntu/intellcar-project
             cd /home/ubuntu/intellcar-project
 
