@@ -12,9 +12,9 @@ use Aws\Rekognition\RekognitionClient;
 
 class RekoControl extends Controller
 {
-    private ?S3Client $s3Client = null;
-    private ?RekognitionClient $rekognitionClient = null;
-    private ?string $bucket = null;
+    private $s3Client = null;
+    private $rekognitionClient = null;
+    private $bucket = null;
 
     private const REQUIRED_VEHICLE_LABELS = ['Car', 'Vehicle', 'Automobile', 'Motor Vehicle', 'Sports Car', 'Sedan', 'SUV', 'Truck', 'Van'];
 

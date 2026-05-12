@@ -90,7 +90,7 @@ jobs:
             APP_NAME=IntellCar
             APP_ENV=production
             APP_KEY=${{ secrets.APP_KEY }}
-            APP_DEBUG=false
+            APP_DEBUG=true
             APP_URL=http://${{ secrets.SERVER_IP }}
 
             APP_LOCALE=en
