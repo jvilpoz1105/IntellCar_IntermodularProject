@@ -136,6 +136,8 @@ class RekoControl extends Controller
 
     public function analyze(Request $request): JsonResponse
     {
+        $this->initAwsClients();
+        
         $request->validate([
             'key' => 'required|string',
         ]);
