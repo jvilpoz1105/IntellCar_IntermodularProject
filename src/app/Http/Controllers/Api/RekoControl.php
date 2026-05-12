@@ -25,15 +25,23 @@ class RekoControl extends Controller
     {
         if ($this->s3Client) return;
 
+        $key = env('AWS_ACCESS_KEY_ID');
+        $secret = env('AWS_SECRET_ACCESS_KEY');
+        $token = env('AWS_SESSION_TOKEN');
         $region = env('AWS_DEFAULT_REGION', 'us-east-1');
-        
+        $this->bucket = env('AWS_BUCKET', 'intellcar-media-tfg-jose');
+
+        if (!$key || !$secret) {
+            throw new \Exception("Faltan las credenciales de AWS en el servidor. Verifica los Secrets de GitHub y el archivo .env. (Key: " . ($key ? 'OK' : 'MISSING') . ", Secret: " . ($secret ? 'OK' : 'MISSING') . ")");
+        }
+
         $credentials = [
-            'key'    => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'key'    => $key,
+            'secret' => $secret,
         ];
 
-        if (env('AWS_SESSION_TOKEN')) {
-            $credentials['token'] = env('AWS_SESSION_TOKEN');
+        if ($token) {
+            $credentials['token'] = $token;
         }
 
         $this->s3Client = new S3Client([
@@ -47,8 +55,6 @@ class RekoControl extends Controller
             'region' => $region,
             'credentials' => $credentials,
         ]);
-
-        $this->bucket = env('AWS_BUCKET', 'intellcar-media-tfg-jose');
     }
 
     public function presigned(Request $request): JsonResponse
