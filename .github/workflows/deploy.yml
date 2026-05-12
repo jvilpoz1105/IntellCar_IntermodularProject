@@ -134,7 +134,10 @@ jobs:
             ENVEOF
 
             # ── 4. Reconstruir SOLO el contenedor de Laravel (sin BD local) ──
-            docker compose -f docker-compose.prod.yml up -d --build
+            docker-compose -f docker-compose.prod.yml up -d --build
+
+            # Esperar un momento a que el contenedor esté listo
+            sleep 5
 
             # ── 5. Instalar dependencias de Composer ──
             docker exec intellcar_api composer install --no-dev --optimize-autoloader
