@@ -75,15 +75,9 @@ jobs:
             # 1. Limpiar directorio completo (incluyendo archivos ocultos)
             rm -rf /home/ubuntu/intellcar-project
 
-            # ── 2. Clonar o actualizar el repositorio ──
-            if [ -d "/home/ubuntu/intellcar-project/.git" ]; then
-              cd /home/ubuntu/intellcar-project
-              git fetch origin main
-              git reset --hard origin/jose
-            else
-              git clone https://github.com/${{ github.repository }}.git /home/ubuntu/intellcar-project
-              cd /home/ubuntu/intellcar-project
-            fi
+            # ── 2. Clonar el repositorio (rama jose) ──
+            git clone -b jose https://github.com/${{ github.repository }}.git /home/ubuntu/intellcar-project
+            cd /home/ubuntu/intellcar-project
 
             # ── 3. Crear el .env de PRODUCCIÓN dinámicamente ──
             cat > src/.env << 'ENVEOF'
