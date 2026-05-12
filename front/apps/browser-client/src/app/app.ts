@@ -36,7 +36,7 @@ import { CommonModule } from '@angular/common';
 })
 export class App {
 	protected readonly title = signal('browser-client');
-	protected readonly isPublishModalOpen = signal(false);
+	public readonly isPublishModalOpen = signal(false);
 
 	constructor() {
 		afterNextRender(() => {
@@ -72,6 +72,7 @@ export class App {
 	}
 
 	togglePublishModal() {
+		console.log('Toggle Modal:', !this.isPublishModalOpen());
 		this.isPublishModalOpen.update(v => !v);
 	}
 }
