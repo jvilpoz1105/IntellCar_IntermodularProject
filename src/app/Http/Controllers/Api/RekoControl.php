@@ -25,14 +25,14 @@ class RekoControl extends Controller
     {
         if ($this->s3Client) return;
 
-        $key = env('AWS_ACCESS_KEY_ID');
-        $secret = env('AWS_SECRET_ACCESS_KEY');
-        $token = env('AWS_SESSION_TOKEN');
-        $region = env('AWS_DEFAULT_REGION', 'us-east-1');
-        $this->bucket = env('AWS_BUCKET', 'intellcar-media-tfg-jose');
+        $key = config('services.aws.key');
+        $secret = config('services.aws.secret');
+        $token = config('services.aws.token');
+        $region = config('services.aws.region', 'us-east-1');
+        $this->bucket = config('services.aws.bucket', 'intellcar-media-tfg-jose');
 
         if (!$key || !$secret) {
-            throw new \Exception("Faltan las credenciales de AWS en el servidor. Verifica los Secrets de GitHub y el archivo .env. (Key: " . ($key ? 'OK' : 'MISSING') . ", Secret: " . ($secret ? 'OK' : 'MISSING') . ")");
+            throw new \Exception("Faltan las credenciales de AWS. (Key: " . ($key ? 'OK' : 'MISSING') . ", Secret: " . ($secret ? 'OK' : 'MISSING') . "). Nota: Estamos usando config('services.aws').");
         }
 
         $credentials = [
