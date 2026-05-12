@@ -60,27 +60,23 @@ class RekoControl extends Controller
         $filename = $request->input('filename');
         $contentType = $request->input('content_type');
 
+        // Generamos una ruta única para la foto
         $key = 'uploads/' . date('Y/m/d') . '/' . uniqid() . '-' . $filename;
 
-        $command = $this->s3Client->putObject([
-            'Bucket' => $this->bucket,
-            'Key' => $key,
+        // Creamos el comando de subida (SIN ejecutarlo todavía)
+        $command = $this->s3Client->getCommand('PutObject', [
+            'Bucket'      => $this->bucket,
+            'Key'         => $key,
             'ContentType' => $contentType,
         ]);
 
-        $url = $this->s3Client->createPresignedRequest(
-            $this->s3Client->getCommand('PutObject', [
-                'Bucket' => $this->bucket,
-                'Key' => $key,
-                'ContentType' => $contentType,
-            ]),
-            '+20 minutes'
-        );
+        // Generamos la URL firmada para que el navegador suba el archivo
+        $presignedRequest = $this->s3Client->createPresignedRequest($command, '+20 minutes');
 
         return response()->json([
-            'upload_url' => (string) $url->getUri(),
-            'key' => $key,
-            'expires' => now()->addMinutes(20)->toIso8601String(),
+            'upload_url' => (string) $presignedRequest->getUri(),
+            'key'        => $key,
+            'expires'    => now()->addMinutes(20)->toIso8601String(),
         ]);
     }
 
