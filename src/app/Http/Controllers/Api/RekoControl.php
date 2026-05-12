@@ -88,14 +88,9 @@ class RekoControl extends Controller
 
         } catch (\Throwable $e) {
             return response()->json([
-                'error' => 'Error crítico en S3 Presigned',
-                'message' => $e->getMessage(),
-                'debug' => [
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                    'aws_region' => env('AWS_DEFAULT_REGION'),
-                    'has_token' => !empty(env('AWS_SESSION_TOKEN'))
-                ]
+                'error' => 'FALLO_DETECTADO_VERSION_6',
+                'mensaje_ia' => $e->getMessage(),
+                'ayuda' => 'Si ves esto, el código nuevo SÍ ha llegado al servidor.'
             ], 500);
         }
     }
