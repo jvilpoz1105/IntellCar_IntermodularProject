@@ -1,6 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { UploadedMedia } from './media-carousel/media-carousel.component';
+import { UploadedMedia } from './publish.types';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable({

@@ -1,13 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MediaItemComponent, MediaStatus } from '../media-item/media-item.component';
-
-export interface UploadedMedia {
-  id: string;
-  url: string | null;
-  status: MediaStatus;
-  labels?: string[];
-}
+import { UploadedMedia } from '../publish.types';
+import { MediaItemComponent } from '../media-item/media-item.component';
 
 @Component({
   selector: 'app-media-carousel',

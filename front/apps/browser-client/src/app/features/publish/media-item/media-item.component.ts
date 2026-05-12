@@ -2,7 +2,7 @@ import { Component, Input, ElementRef, ViewChild, AfterViewInit, OnChanges, Simp
 import { CommonModule } from '@angular/common';
 import { gsap } from 'gsap';
 
-export type MediaStatus = 'pending' | 'uploading' | 'analyzing' | 'success' | 'error';
+import { MediaStatus } from '../publish.types';
 
 @Component({
   selector: 'app-media-item',
