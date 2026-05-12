@@ -52,32 +52,39 @@ class RekoControl extends Controller
 
     public function presigned(Request $request): JsonResponse
     {
-        $request->validate([
-            'filename' => 'required|string|max:255',
-            'content_type' => 'required|string|max:100',
-        ]);
+        try {
+            $request->validate([
+                'filename' => 'required|string|max:255',
+                'content_type' => 'required|string|max:100',
+            ]);
 
-        $filename = $request->input('filename');
-        $contentType = $request->input('content_type');
+            $filename = $request->input('filename');
+            $contentType = $request->input('content_type');
 
-        // Generamos una ruta única para la foto
-        $key = 'uploads/' . date('Y/m/d') . '/' . uniqid() . '-' . $filename;
+            $key = 'uploads/' . date('Y/m/d') . '/' . uniqid() . '-' . $filename;
 
-        // Creamos el comando de subida (SIN ejecutarlo todavía)
-        $command = $this->s3Client->getCommand('PutObject', [
-            'Bucket'      => $this->bucket,
-            'Key'         => $key,
-            'ContentType' => $contentType,
-        ]);
+            $command = $this->s3Client->getCommand('PutObject', [
+                'Bucket'      => $this->bucket,
+                'Key'         => $key,
+                'ContentType' => $contentType,
+            ]);
 
-        // Generamos la URL firmada para que el navegador suba el archivo
-        $presignedRequest = $this->s3Client->createPresignedRequest($command, '+20 minutes');
+            $presignedRequest = $this->s3Client->createPresignedRequest($command, '+20 minutes');
 
-        return response()->json([
-            'upload_url' => (string) $presignedRequest->getUri(),
-            'key'        => $key,
-            'expires'    => now()->addMinutes(20)->toIso8601String(),
-        ]);
+            return response()->json([
+                'upload_url' => (string) $presignedRequest->getUri(),
+                'key'        => $key,
+                'expires'    => now()->addMinutes(20)->toIso8601String(),
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al generar URL de S3',
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 500);
+        }
     }
 
     public function internalVerify(Request $request): JsonResponse
