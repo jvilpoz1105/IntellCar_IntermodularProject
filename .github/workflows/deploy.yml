@@ -72,8 +72,8 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # ── 1. Crear directorio del proyecto si no existe ──
-            mkdir -p /home/ubuntu/intellcar-project
+            # 1. Limpiar directorio completo (incluyendo archivos ocultos)
+            rm -rf /home/ubuntu/intellcar-project
 
             # ── 2. Clonar o actualizar el repositorio ──
             if [ -d "/home/ubuntu/intellcar-project/.git" ]; then
