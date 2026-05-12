@@ -12,24 +12,26 @@ use Aws\Rekognition\RekognitionClient;
 
 class RekoControl extends Controller
 {
-    private S3Client $s3Client;
-    private RekognitionClient $rekognitionClient;
-    private string $bucket;
-    private string $internalToken;
+    private ?S3Client $s3Client = null;
+    private ?RekognitionClient $rekognitionClient = null;
+    private ?string $bucket = null;
 
-    private const GENERIC_LABELS = ['Car', 'Vehicle', 'Transportation', 'Automobile', 'Motor Vehicle'];
     private const REQUIRED_VEHICLE_LABELS = ['Car', 'Vehicle', 'Automobile', 'Motor Vehicle', 'Sports Car', 'Sedan', 'SUV', 'Truck', 'Van'];
 
-    public function __construct()
+    /**
+     * Inicializa los clientes de AWS bajo demanda dentro de un try-catch
+     */
+    private function initAwsClients()
     {
-        $region = config('services.ses.region', env('AWS_DEFAULT_REGION', 'us-east-1'));
+        if ($this->s3Client) return;
+
+        $region = env('AWS_DEFAULT_REGION', 'us-east-1');
         
         $credentials = [
             'key'    => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
         ];
 
-        // Importante para AWS Learner Lab
         if (env('AWS_SESSION_TOKEN')) {
             $credentials['token'] = env('AWS_SESSION_TOKEN');
         }
@@ -46,13 +48,14 @@ class RekoControl extends Controller
             'credentials' => $credentials,
         ]);
 
-        $this->bucket = env('AWS_BUCKET', 'intellcar-media');
-        $this->internalToken = env('INTERNAL_API_TOKEN', 'intellcar-internal-token');
+        $this->bucket = env('AWS_BUCKET', 'intellcar-media-tfg-jose');
     }
 
     public function presigned(Request $request): JsonResponse
     {
         try {
+            $this->initAwsClients();
+
             $request->validate([
                 'filename' => 'required|string|max:255',
                 'content_type' => 'required|string|max:100',
@@ -77,23 +80,31 @@ class RekoControl extends Controller
                 'expires'    => now()->addMinutes(20)->toIso8601String(),
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json([
-                'error' => 'Error al generar URL de S3',
+                'error' => 'Error crítico en S3 Presigned',
                 'message' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile()
+                'debug' => [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'aws_region' => env('AWS_DEFAULT_REGION'),
+                    'has_token' => !empty(env('AWS_SESSION_TOKEN'))
+                ]
             ], 500);
         }
     }
 
     public function internalVerify(Request $request): JsonResponse
     {
+        $internalToken = env('INTERNAL_API_TOKEN', 'intellcar-internal-token');
         $token = $request->header('X-Internal-Token');
 
-        if ($token !== $this->internalToken) {
+        if ($token !== $internalToken) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
+
+        $this->initAwsClients();
+        // ... resto del código ...
 
         $request->validate([
             'key' => 'required|string',
