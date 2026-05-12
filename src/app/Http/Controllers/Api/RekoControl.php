@@ -23,23 +23,27 @@ class RekoControl extends Controller
     public function __construct()
     {
         $region = config('services.ses.region', env('AWS_DEFAULT_REGION', 'us-east-1'));
+        
+        $credentials = [
+            'key'    => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+        ];
+
+        // Importante para AWS Learner Lab
+        if (env('AWS_SESSION_TOKEN')) {
+            $credentials['token'] = env('AWS_SESSION_TOKEN');
+        }
 
         $this->s3Client = new S3Client([
             'version' => 'latest',
             'region' => $region,
-            'credentials' => [
-                'key' => env('AWS_ACCESS_KEY_ID'),
-                'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            ],
+            'credentials' => $credentials,
         ]);
 
         $this->rekognitionClient = new RekognitionClient([
             'version' => 'latest',
             'region' => $region,
-            'credentials' => [
-                'key' => env('AWS_ACCESS_KEY_ID'),
-                'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            ],
+            'credentials' => $credentials,
         ]);
 
         $this->bucket = env('AWS_BUCKET', 'intellcar-media');
