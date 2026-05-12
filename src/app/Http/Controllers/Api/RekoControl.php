@@ -23,7 +23,8 @@ class RekoControl extends Controller
      */
     private function initAwsClients()
     {
-        if ($this->s3Client) return;
+        // Si ambos ya están inicializados, no hacemos nada
+        if ($this->s3Client && $this->rekognitionClient) return;
 
         $key = config('services.aws.key');
         $secret = config('services.aws.secret');
@@ -32,7 +33,7 @@ class RekoControl extends Controller
         $this->bucket = config('services.aws.bucket', 'intellcar-media-tfg-jose');
 
         if (!$key || !$secret) {
-            throw new \Exception("Faltan las credenciales de AWS. (Key: " . ($key ? 'OK' : 'MISSING') . ", Secret: " . ($secret ? 'OK' : 'MISSING') . "). Nota: Estamos usando config('services.aws').");
+            throw new \Exception("Faltan las credenciales de AWS. (Key: " . ($key ? 'OK' : 'MISSING') . ", Secret: " . ($secret ? 'OK' : 'MISSING') . ")");
         }
 
         $credentials = [
@@ -44,12 +45,14 @@ class RekoControl extends Controller
             $credentials['token'] = $token;
         }
 
+        // Inicializamos S3
         $this->s3Client = new S3Client([
             'version' => 'latest',
             'region' => $region,
             'credentials' => $credentials,
         ]);
 
+        // Inicializamos Rekognition
         $this->rekognitionClient = new RekognitionClient([
             'version' => 'latest',
             'region' => $region,

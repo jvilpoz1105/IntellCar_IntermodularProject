@@ -4,6 +4,18 @@ resource "aws_s3_bucket" "intellcar_media" {
   bucket = "intellcar-media-tfg-jose" # El nombre debe ser único en todo AWS
 }
 
+resource "aws_s3_bucket_cors_configuration" "media_cors" {
+  bucket = aws_s3_bucket.intellcar_media.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST", "GET"]
+    allowed_origins = ["*"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+
 # Configuración para que las fotos sean accesibles desde la App
 resource "aws_s3_bucket_public_access_block" "media_access" {
   bucket = aws_s3_bucket.intellcar_media.id
