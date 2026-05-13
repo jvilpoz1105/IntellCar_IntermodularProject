@@ -26,3 +26,15 @@ variable "internal_api_token" {
   type        = string
   sensitive   = true
 }
+
+variable "duck_domain" {
+  description = "Dominio de DuckDNS (sin https://)"
+  type        = string
+  default     = "intellcar.duckdns.org"
+}
+
+variable "certbot_email" {
+  description = "Email para Let's Encrypt (certificados SSL)"
+  type        = string
+  default     = "jvilpoz1105@g.educaand.es"
+}
