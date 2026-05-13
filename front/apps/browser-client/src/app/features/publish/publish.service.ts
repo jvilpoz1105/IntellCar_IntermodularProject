@@ -1,5 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { UploadedMedia } from './publish.types';
 import { firstValueFrom } from 'rxjs';
 
@@ -7,8 +8,8 @@ import { firstValueFrom } from 'rxjs';
   providedIn: 'root'
 })
 export class PublishService {
-  // Configuración de la API (Usando tu IP de EC2)
-  private readonly API_BASE = 'http://18.205.229.197/api';
+  // Configuración de la API (Usando variables de entorno)
+  private readonly API_BASE = environment.apiUrl;
   private mediaItems = signal<UploadedMedia[]>([]);
 
   // Selectors

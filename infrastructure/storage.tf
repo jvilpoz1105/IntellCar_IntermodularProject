@@ -1,7 +1,8 @@
 # Configuración del Bucket S3 para las fotos
 # 1. Bucket para las fotos de los anuncios, posts y garaje
 resource "aws_s3_bucket" "intellcar_media" {
-  bucket = "intellcar-media-tfg-jose" # El nombre debe ser único en todo AWS
+  bucket        = "intellcar-media-tfg-jose" # El nombre debe ser único en todo AWS
+  force_destroy = true                       # Permite borrar el bucket aunque contenga archivos (Útil en desarrollo)
 }
 
 resource "aws_s3_bucket_cors_configuration" "media_cors" {
@@ -45,7 +46,8 @@ resource "aws_s3_bucket_policy" "media_policy" {
 
 # 2. Bucket para el despliegue de Angular (Static Website)
 resource "aws_s3_bucket" "angular_frontend" {
-  bucket = "intellcar-web-tfg-jose"
+  bucket        = "intellcar-web-tfg-jose"
+  force_destroy = true # Permite borrar el bucket aunque contenga archivos (Útil en desarrollo)
 }
 
 resource "aws_s3_bucket_website_configuration" "angular_config" {

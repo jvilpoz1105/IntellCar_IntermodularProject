@@ -36,6 +36,12 @@ jobs:
         working-directory: ./front
         run: pnpm install --frozen-lockfile
 
+      - name: Generar environment.prod.ts dinámicamente
+        working-directory: ./front/apps/browser-client
+        run: |
+          mkdir -p src/environments
+          echo "export const environment = { production: true, apiUrl: 'http://${{ secrets.SERVER_IP }}/api' };" > src/environments/environment.prod.ts
+
       - name: Build de producción (Angular via Turbo)
         working-directory: ./front
         run: pnpm run build
