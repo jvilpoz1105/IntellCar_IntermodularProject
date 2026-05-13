@@ -8,7 +8,7 @@ import { firstValueFrom } from 'rxjs';
 })
 export class PublishService {
   // Configuración de la API (Usando tu IP de EC2)
-  private readonly API_BASE = 'http://54.85.47.119/api';
+  private readonly API_BASE = 'http://18.205.229.197/api';
   private mediaItems = signal<UploadedMedia[]>([]);
 
   // Selectors
