@@ -37,7 +37,7 @@ resource "aws_instance" "intellcar_server" {
               usermod -aG docker ubuntu
 
               # 3. Descargar frontend desde S3
-              aws s3 sync s3://${BUCKET_NAME}/ /var/www/html/ --delete
+              aws s3 sync s3://$${BUCKET_NAME}/ /var/www/html/ --delete
 
               # 4. Crear configuración inicial de Nginx (HTTP solo para certbot)
               cat > /etc/nginx/sites-available/default << 'NGINX_EOF'
@@ -50,19 +50,19 @@ resource "aws_instance" "intellcar_server" {
                   index index.html;
 
                   location / {
-                      try_files $uri $uri/ /index.html;
+                      try_files $${uri} $${uri}/ /index.html;
                   }
 
                   location /api/ {
-                      proxy_pass http://localhost:${API_PORT}/;
+                      proxy_pass http://localhost:$${API_PORT}/;
                       proxy_http_version 1.1;
-                      proxy_set_header Upgrade $http_upgrade;
+                      proxy_set_header Upgrade $${http_upgrade};
                       proxy_set_header Connection 'upgrade';
-                      proxy_set_header Host $host;
-                      proxy_set_header X-Real-IP $remote_addr;
-                      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                      proxy_set_header X-Forwarded-Proto $scheme;
-                      proxy_cache_bypass $http_upgrade;
+                      proxy_set_header Host $${host};
+                      proxy_set_header X-Real-IP $${remote_addr};
+                      proxy_set_header X-Forwarded-For $${proxy_add_x_forwarded_for};
+                      proxy_set_header X-Forwarded-Proto $${scheme};
+                      proxy_cache_bypass $${http_upgrade};
                   }
               }
               NGINX_EOF
@@ -72,7 +72,7 @@ resource "aws_instance" "intellcar_server" {
               systemctl restart nginx
 
               # 6. Obtener certificado SSL (primero en HTTP, luego configurar HTTPS)
-              certbot --nginx -d ${DUCK_DOMAIN} --non-interactive --agree-tos --email ${var.certbot_email} || echo "Certbot failed, retry later"
+              certbot --nginx -d $${DUCK_DOMAIN} --non-interactive --agree-tos --email ${var.certbot_email} || echo "Certbot failed, retry later"
 
               # 7. Forzar redirección HTTP -> HTTPS (actualizar config)
               if [ -f /etc/letsencrypt/options-ssl-nginx.conf ]; then
@@ -80,36 +80,36 @@ resource "aws_instance" "intellcar_server" {
                   server {
                       listen 80;
                       listen [::]:80;
-                      server_name ${DUCK_DOMAIN};
-                      return 301 https://$host$request_uri;
+                      server_name $${DUCK_DOMAIN};
+                      return 301 https://$${host}$${request_uri};
                   }
 
                   server {
                       listen 443 ssl http2;
                       listen [::]:443 ssl http2;
-                      server_name ${DUCK_DOMAIN};
+                      server_name $${DUCK_DOMAIN};
 
-                      ssl_certificate /etc/letsencrypt/live/${DUCK_DOMAIN}/fullchain.pem;
-                      ssl_certificate_key /etc/letsencrypt/live/${DUCK_DOMAIN}/privkey.pem;
+                      ssl_certificate /etc/letsencrypt/live/$${DUCK_DOMAIN}/fullchain.pem;
+                      ssl_certificate_key /etc/letsencrypt/live/$${DUCK_DOMAIN}/privkey.pem;
                       include /etc/letsencrypt/options-ssl-nginx.conf;
 
                       root /var/www/html;
                       index index.html;
 
                       location / {
-                          try_files $uri $uri/ /index.html;
+                          try_files $${uri} $${uri}/ /index.html;
                       }
 
                       location /api/ {
-                          proxy_pass http://localhost:${API_PORT}/;
+                          proxy_pass http://localhost:$${API_PORT}/;
                           proxy_http_version 1.1;
-                          proxy_set_header Upgrade $http_upgrade;
+                          proxy_set_header Upgrade $${http_upgrade};
                           proxy_set_header Connection 'upgrade';
-                          proxy_set_header Host $host;
-                          proxy_set_header X-Real-IP $remote_addr;
-                          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                          proxy_set_header X-Forwarded-Proto $scheme;
-                          proxy_cache_bypass $http_upgrade;
+                          proxy_set_header Host $${host};
+                          proxy_set_header X-Real-IP $${remote_addr};
+                          proxy_set_header X-Forwarded-For $${proxy_add_x_forwarded_for};
+                          proxy_set_header X-Forwarded-Proto $${scheme};
+                          proxy_cache_bypass $${http_upgrade};
                       }
                   }
                   NGINX_HTTPS_EOF
@@ -121,7 +121,7 @@ resource "aws_instance" "intellcar_server" {
               echo "0 0 * * * certbot renew --quiet" | tee -a /etc/cron.d/certbot-renew
 
               # 9. Sincronización periódica del frontend (opcional, cada 5 min)
-              echo "*/5 * * * * aws s3 sync s3://${BUCKET_NAME}/ /var/www/html/ --delete" | tee -a /etc/cron.d/s3-sync
+              echo "*/5 * * * * aws s3 sync s3://$${BUCKET_NAME}/ /var/www/html/ --delete" | tee -a /etc/cron.d/s3-sync
 
               EOF
 
