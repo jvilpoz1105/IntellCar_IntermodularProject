@@ -6,7 +6,13 @@ import { API_CONFIG } from '../core/config/api.config';
 
 interface PaginatedResponse<T> {
   data: T[];
-  total: number;
+  total?: number;
+  meta?: {
+    total: number;
+    current_page: number;
+    last_page: number;
+    per_page: number;
+  };
 }
 
 interface AdvertMedia {
@@ -15,42 +21,28 @@ interface AdvertMedia {
   media_type: 'image' | 'video';
 }
 
-interface AdvertModel {
-  model_name?: string;
-  make?: {
-    make_name?: string;
-  };
-}
-
 interface MarketplaceAdvert {
-  ad_id: number;
+  advert_id: number;
   ad_title: string;
-  ad_type?: string;
   price: number;
   city?: string;
   region?: string;
-  model?: AdvertModel;
-  seller?: {
-    user_name?: string;
-  };
-  media?: AdvertMedia[];
+  make_name?: string;
+  model_name?: string;
+  media?: AdvertMedia | null;
 }
 
 interface UniversePost {
   post_id: number;
   title?: string;
-  content: string;
+  content_excerpt?: string;
   created_at?: string;
   author?: {
-    user_name?: string;
+    user_id?: number;
+    username?: string;
+    profile_picture?: string;
   };
-  media?: Array<{
-    media_id: number;
-    media_url: string;
-    media_type: 'image' | 'video';
-  }>;
-  likes?: unknown[];
-  comments?: unknown[];
+  media?: AdvertMedia | null;
 }
 
 interface ProfileDetail {
@@ -145,12 +137,10 @@ interface ProfileDetail {
           <div class="p-4">
             <p class="font-bold text-slate-100">{{ advert.ad_title }}</p>
             <p class="text-sm text-slate-400">
-              {{ advert.model?.make?.make_name || 'Marca' }} • {{ advert.model?.model_name || 'Modelo' }}
+              {{ advert.make_name || 'Marca' }} • {{ advert.model_name || 'Modelo' }}
             </p>
             <p class="text-sm text-slate-400">{{ advert.city || 'Ciudad' }}, {{ advert.region || 'Región' }}</p>
-            <p class="text-sm text-slate-400">Vendedor: {{ advert.seller?.user_name || 'Usuario' }}</p>
             <div class="mt-3 flex items-center justify-between">
-              <span class="text-xs px-2 py-1 rounded bg-slate-700 text-slate-200 uppercase">{{ advert.ad_type || 'used' }}</span>
               <p class="text-lg text-green-400 font-bold">{{ advert.price | number:'1.0-0' }} €</p>
             </div>
           </div>
@@ -196,8 +186,7 @@ export class MarketplaceComponent implements OnInit {
   }
 
   getCover(advert: MarketplaceAdvert): string | null {
-    const image = advert.media?.find((m) => m.media_type === 'image') || advert.media?.[0];
-    return image?.media_url ?? null;
+    return advert.media?.media_url ?? null;
   }
 
   private loadAdverts(): void {
@@ -213,11 +202,11 @@ export class MarketplaceComponent implements OnInit {
     }
 
     this.http
-      .get<PaginatedResponse<MarketplaceAdvert>>(`${API_CONFIG.BASE_URL}/adverts`, { params })
+      .get<PaginatedResponse<MarketplaceAdvert>>(`${API_CONFIG.BASE_URL}/market`, { params })
       .subscribe({
         next: (response) => {
           this.adverts = response.data ?? [];
-          this.total = response.total ?? this.adverts.length;
+          this.total = response.meta?.total ?? response.total ?? this.adverts.length;
           this.loading = false;
         },
         error: () => {
@@ -304,20 +293,18 @@ export class EventsComponent {}
           <div class="flex items-start gap-4">
             <span class="text-3xl">🧑‍🔧</span>
             <div class="flex-1">
-              <p class="font-bold">{{ post.author?.user_name || 'Usuario' }}</p>
+              <p class="font-bold">{{ post.author?.username || 'Usuario' }}</p>
               <p *ngIf="post.title" class="text-sm text-slate-300 mt-1">{{ post.title }}</p>
-              <p class="text-slate-400 mt-2">{{ post.content }}</p>
+              <p class="text-slate-400 mt-2">{{ post.content_excerpt }}</p>
 
               <img
-                *ngIf="getFirstPostImage(post) as imageUrl"
-                [src]="imageUrl"
+                *ngIf="post.media?.media_url"
+                [src]="post.media?.media_url"
                 alt="post media"
                 class="mt-3 w-full max-h-72 object-cover rounded-lg border border-slate-700"
               />
 
               <div class="flex gap-4 mt-3 text-slate-400 text-sm">
-                <span>❤️ {{ post.likes?.length || 0 }}</span>
-                <span>💬 {{ post.comments?.length || 0 }}</span>
                 <span *ngIf="post.created_at">🕒 {{ post.created_at | date:'short' }}</span>
               </div>
             </div>
@@ -343,19 +330,14 @@ export class UniverseComponent implements OnInit {
     this.loadPosts();
   }
 
-  getFirstPostImage(post: UniversePost): string | null {
-    const image = post.media?.find((m) => m.media_type === 'image') || post.media?.[0];
-    return image?.media_url ?? null;
-  }
-
   private loadPosts(): void {
     this.loading = true;
     this.errorMessage = '';
 
-    this.http.get<PaginatedResponse<UniversePost>>(`${API_CONFIG.BASE_URL}/posts`).subscribe({
+    this.http.get<PaginatedResponse<UniversePost>>(`${API_CONFIG.BASE_URL}/social`).subscribe({
       next: (response) => {
         this.posts = response.data ?? [];
-        this.total = response.total ?? this.posts.length;
+        this.total = response.meta?.total ?? response.total ?? this.posts.length;
         this.loading = false;
       },
       error: () => {

@@ -10,7 +10,13 @@ import { AuthService, User } from '../core/services/auth.service';
 
 interface PaginatedResponse<T> {
   data: T[];
-  total: number;
+  total?: number;
+  meta?: {
+    total: number;
+    current_page: number;
+    last_page: number;
+    per_page: number;
+  };
 }
 
 interface AppUserDetail {
@@ -192,11 +198,11 @@ export class DashboardComponent implements OnInit {
             .pipe(catchError(() => of(null)));
 
           const advertsRequest = this.http
-            .get<PaginatedResponse<CarAdvert>>(`${API_CONFIG.BASE_URL}/adverts`)
+            .get<PaginatedResponse<CarAdvert>>(`${API_CONFIG.BASE_URL}/market`)
             .pipe(catchError(() => of({ data: [], total: 0 } as PaginatedResponse<CarAdvert>)));
 
           const eventsRequest = this.http
-            .get<PaginatedResponse<EventKdd>>(`${API_CONFIG.BASE_URL}/events`)
+            .get<PaginatedResponse<EventKdd>>(`${API_CONFIG.BASE_URL}/kdds`)
             .pipe(catchError(() => of(null)));
 
           return forkJoin({
@@ -210,10 +216,10 @@ export class DashboardComponent implements OnInit {
         this.endpointStatus.user = !!userDetail;
         this.endpointStatus.events = !!events;
 
-        this.stats.advertsTotal = adverts.total ?? 0;
+        this.stats.advertsTotal = adverts.meta?.total ?? adverts.total ?? 0;
         this.stats.myPosts = userDetail?.posts?.length ?? 0;
         this.stats.garageTotal = userDetail?.garage?.length ?? 0;
-        this.stats.eventsTotal = events?.total ?? 0;
+        this.stats.eventsTotal = events?.meta?.total ?? events?.total ?? 0;
 
         this.recentAdverts = (adverts.data ?? []).slice(0, 3);
         this.upcomingEvents = (events?.data ?? []).slice(0, 3);
