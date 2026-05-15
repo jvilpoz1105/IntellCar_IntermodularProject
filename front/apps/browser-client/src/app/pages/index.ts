@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { AuthService, User } from '../core/services/auth.service';
 import { API_CONFIG } from '../core/config/api.config';
@@ -514,14 +515,19 @@ export class GarageComponent {}
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="p-8">
       <div class="mb-6 flex items-center justify-between">
         <h2 class="text-3xl font-bold bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent">Mi Perfil</h2>
-        <button (click)="reload()" class="px-3 py-2 rounded-lg border bg-slate-800/60 border-slate-700 text-slate-200 text-sm hover:bg-slate-700/60">
-          Recargar
-        </button>
+        <div class="flex gap-2">
+          <button *ngIf="!isEditing" (click)="startEdit()" class="px-3 py-2 rounded-lg border bg-slate-800/60 border-slate-700 text-slate-200 text-sm hover:bg-slate-700/60">
+            Editar perfil
+          </button>
+          <button *ngIf="!isEditing" (click)="reload()" class="px-3 py-2 rounded-lg border bg-slate-800/60 border-slate-700 text-slate-200 text-sm hover:bg-slate-700/60">
+            Recargar
+          </button>
+        </div>
       </div>
 
       <div *ngIf="loading" class="rounded-lg border border-slate-700 bg-slate-800/50 p-4 text-slate-300 mb-4">
@@ -532,10 +538,16 @@ export class GarageComponent {}
         {{ errorMessage }}
       </div>
 
+      <div *ngIf="successMessage" class="rounded-lg border border-green-500/40 bg-green-500/10 p-4 text-green-200 mb-4">
+        {{ successMessage }}
+      </div>
+
       <div *ngIf="profile" class="max-w-4xl grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div class="xl:col-span-2 bg-slate-800/50 p-6 rounded-lg border border-slate-700">
           <h3 class="font-bold mb-4 text-lg">Información Personal</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <!-- VIEW MODE -->
+          <div *ngIf="!isEditing" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="text-sm text-slate-400">Nombre</label>
               <p class="font-semibold">{{ profile.user_name }}</p>
@@ -569,6 +581,56 @@ export class GarageComponent {}
               <p class="font-semibold">{{ profile.registration_date ? (profile.registration_date | date:'mediumDate') : 'No disponible' }}</p>
             </div>
           </div>
+
+          <!-- EDIT MODE -->
+          <form *ngIf="isEditing" (ngSubmit)="saveProfile()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm text-slate-400 block mb-1">Nombre</label>
+              <input [(ngModel)]="editForm.user_name" name="user_name" type="text"
+                class="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-600 text-slate-100 text-sm focus:outline-none focus:border-cyan-500" />
+            </div>
+            <div>
+              <label class="text-sm text-slate-400 block mb-1">Email principal</label>
+              <p class="font-semibold py-2 text-slate-400 text-sm">{{ profile.email_address }}</p>
+            </div>
+            <div>
+              <label class="text-sm text-slate-400 block mb-1">Email de contacto</label>
+              <input [(ngModel)]="editForm.contact_email" name="contact_email" type="email"
+                class="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-600 text-slate-100 text-sm focus:outline-none focus:border-cyan-500" />
+            </div>
+            <div>
+              <label class="text-sm text-slate-400 block mb-1">Teléfono</label>
+              <input [(ngModel)]="editForm.phone" name="phone" type="text"
+                class="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-600 text-slate-100 text-sm focus:outline-none focus:border-cyan-500" />
+            </div>
+            <div>
+              <label class="text-sm text-slate-400 block mb-1">Tipo de perfil</label>
+              <p class="font-semibold py-2 text-slate-400 text-sm">{{ getUserTagLabel(profile.user_tag) }}</p>
+            </div>
+            <div>
+              <label class="text-sm text-slate-400 block mb-1">Paddock</label>
+              <p class="font-semibold py-2 text-slate-400 text-sm">{{ profile.paddock?.paddock_name || 'Sin paddock' }}</p>
+            </div>
+            <div class="md:col-span-2">
+              <label class="text-sm text-slate-400 block mb-1">Dirección</label>
+              <input [(ngModel)]="editForm.address" name="address" type="text"
+                class="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-600 text-slate-100 text-sm focus:outline-none focus:border-cyan-500" />
+            </div>
+            <div>
+              <label class="text-sm text-slate-400 block mb-1">Miembro desde</label>
+              <p class="font-semibold py-2 text-slate-400 text-sm">{{ profile.registration_date ? (profile.registration_date | date:'mediumDate') : 'No disponible' }}</p>
+            </div>
+            <div class="md:col-span-2 flex gap-3 justify-end mt-2">
+              <button type="button" (click)="cancelEdit()" [disabled]="isSaving"
+                class="px-4 py-2 rounded-lg border border-slate-600 text-slate-300 text-sm hover:bg-slate-700/60 disabled:opacity-50">
+                Cancelar
+              </button>
+              <button type="submit" [disabled]="isSaving"
+                class="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-semibold transition disabled:opacity-50">
+                {{ isSaving ? 'Guardando...' : 'Guardar cambios' }}
+              </button>
+            </div>
+          </form>
         </div>
 
         <div class="bg-slate-800/50 p-6 rounded-lg border border-slate-700 space-y-4">
@@ -596,7 +658,16 @@ export class ProfileComponent implements OnInit {
 
   loading = true;
   errorMessage = '';
+  successMessage = '';
   profile: ProfileDetail | null = null;
+  isEditing = false;
+  isSaving = false;
+  editForm = {
+    user_name: '',
+    contact_email: '',
+    phone: '',
+    address: '',
+  };
 
   ngOnInit(): void {
     this.loadProfile();
@@ -604,6 +675,50 @@ export class ProfileComponent implements OnInit {
 
   reload(): void {
     this.loadProfile();
+  }
+
+  startEdit(): void {
+    if (!this.profile) return;
+    this.editForm = {
+      user_name: this.profile.user_name ?? '',
+      contact_email: this.profile.contact_email ?? '',
+      phone: this.profile.phone ?? '',
+      address: this.profile.address ?? '',
+    };
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.isEditing = true;
+  }
+
+  cancelEdit(): void {
+    this.isEditing = false;
+    this.errorMessage = '';
+  }
+
+  saveProfile(): void {
+    if (!this.profile || this.isSaving) return;
+    this.isSaving = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    const payload: Record<string, string> = {};
+    if (this.editForm.user_name.trim()) payload['user_name'] = this.editForm.user_name.trim();
+    if (this.editForm.contact_email.trim()) payload['contact_email'] = this.editForm.contact_email.trim();
+    if (this.editForm.phone.trim()) payload['phone'] = this.editForm.phone.trim();
+    if (this.editForm.address.trim()) payload['address'] = this.editForm.address.trim();
+
+    this.http.patch(`${API_CONFIG.BASE_URL}/users/${this.profile.user_id}`, payload).subscribe({
+      next: () => {
+        this.isSaving = false;
+        this.isEditing = false;
+        this.successMessage = 'Perfil actualizado correctamente.';
+        this.loadProfile();
+      },
+      error: () => {
+        this.isSaving = false;
+        this.errorMessage = 'No se pudieron guardar los cambios. Inténtalo de nuevo.';
+      },
+    });
   }
 
   getUserTagLabel(tag?: string): string {
