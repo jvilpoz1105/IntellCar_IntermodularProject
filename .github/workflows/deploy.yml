@@ -40,7 +40,7 @@ jobs:
         working-directory: ./front/apps/browser-client
         run: |
           mkdir -p src/environments
-          echo "export const environment = { production: true, apiUrl: 'http://${{ secrets.SERVER_IP }}/api' };" > src/environments/environment.prod.ts
+          echo "export const environment = { production: true, apiUrl: 'https://${{ secrets.DOMAIN_NAME }}/api' };" > src/environments/environment.prod.ts
 
       - name: Build de producción (Angular via Turbo)
         working-directory: ./front
