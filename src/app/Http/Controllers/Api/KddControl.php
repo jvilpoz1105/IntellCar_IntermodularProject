@@ -12,16 +12,24 @@ class KddControl extends Controller
 {
     /**
      * Obtener listado general (solo datos más importantes).
+     * Acepta query param ?mine=1 para filtrar solo eventos en los que participa el usuario autenticado.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // En la vista general mostramos creador y paddock, sin cargar los asistentes completos
-        $events = EventKdd::with(['creator:user_id,user_name,profile_picture', 'paddock'])
+        $query = EventKdd::with(['creator:user_id,user_name,profile_picture', 'paddock', 'attendees'])
             ->where('event_date', '>=', now())
             ->where('visible', true)
-            ->whereNull('onDeleteRequest')
-            ->orderBy('event_date', 'asc')
-            ->paginate(20);
+            ->whereNull('onDeleteRequest');
+
+        // Filtro: solo eventos en los que el usuario autenticado está inscrito
+        if ($request->boolean('mine') && $request->user('sanctum')) {
+            $userId = $request->user('sanctum')->user_id;
+            $query->whereHas('attendees', function ($q) use ($userId) {
+                $q->where('app_user.user_id', $userId);
+            });
+        }
+
+        $events = $query->orderBy('event_date', 'asc')->paginate(20);
 
         return KddEventSummaryResource::collection($events);
     }
@@ -87,6 +95,50 @@ class KddControl extends Controller
 
         return response()->json([
             'message' => 'Eliminación del evento solicitada exitosamente',
+        ]);
+    }
+
+    /**
+     * Unirse a un evento.
+     */
+    public function join(Request $request, $id)
+    {
+        $event = EventKdd::findOrFail($id);
+        $userId = $request->user()->user_id;
+
+        if ($event->attendees()->where('app_user.user_id', $userId)->exists()) {
+            return response()->json(['message' => 'Ya estás inscrito en este evento'], 409);
+        }
+
+        if ($event->max_participants > 0 && $event->attendees()->count() >= $event->max_participants) {
+            return response()->json(['message' => 'El evento ha alcanzado el límite de participantes'], 422);
+        }
+
+        $event->attendees()->attach($userId, ['joined_at' => now()]);
+
+        return response()->json([
+            'message' => 'Te has unido al evento correctamente',
+            'attendees_count' => $event->attendees()->count(),
+        ]);
+    }
+
+    /**
+     * Abandonar un evento.
+     */
+    public function leave(Request $request, $id)
+    {
+        $event = EventKdd::findOrFail($id);
+        $userId = $request->user()->user_id;
+
+        if (!$event->attendees()->where('app_user.user_id', $userId)->exists()) {
+            return response()->json(['message' => 'No estás inscrito en este evento'], 404);
+        }
+
+        $event->attendees()->detach($userId);
+
+        return response()->json([
+            'message' => 'Has abandonado el evento',
+            'attendees_count' => $event->attendees()->count(),
         ]);
     }
 

@@ -53,6 +53,9 @@ interface EventKdd {
   title: string;
   event_date: string;
   city?: string;
+  is_attending?: boolean;
+  attendees_count?: number;
+  max_participants?: number;
 }
 
 interface ProfileDetail {
@@ -259,9 +262,9 @@ export class MarketplaceComponent implements OnInit {
   imports: [CommonModule],
   template: `
     <div class="p-8">
-      <div class="mb-6 flex items-center justify-between">
+      <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <h2 class="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">Eventos</h2>
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
           <button class="px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white text-sm font-semibold transition">
             + Crear evento
           </button>
@@ -269,6 +272,24 @@ export class MarketplaceComponent implements OnInit {
             Recargar
           </button>
         </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="mb-6 flex gap-2">
+        <button
+          (click)="setFilter(false)"
+          class="px-4 py-2 rounded-lg border text-sm font-semibold transition"
+          [ngClass]="!mineOnly ? 'bg-yellow-500/20 border-yellow-400 text-yellow-200' : 'bg-slate-800/60 border-slate-700 text-slate-300'"
+        >
+          Todos los eventos
+        </button>
+        <button
+          (click)="setFilter(true)"
+          class="px-4 py-2 rounded-lg border text-sm font-semibold transition"
+          [ngClass]="mineOnly ? 'bg-yellow-500/20 border-yellow-400 text-yellow-200' : 'bg-slate-800/60 border-slate-700 text-slate-300'"
+        >
+          Mis eventos
+        </button>
       </div>
 
       <!-- Skeleton -->
@@ -292,8 +313,8 @@ export class MarketplaceComponent implements OnInit {
       <!-- Empty state -->
       <div *ngIf="!loading && events.length === 0 && !errorMessage" class="flex flex-col items-center justify-center py-20 text-slate-400">
         <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="mb-4 text-slate-600"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-        <p class="text-lg font-semibold text-slate-300">No hay eventos próximos</p>
-        <p class="text-sm mt-1">¡Crea el primero y organiza tu próximo meet!</p>
+        <p class="text-lg font-semibold text-slate-300">{{ mineOnly ? 'No estás inscrito en ningún evento' : 'No hay eventos próximos' }}</p>
+        <p class="text-sm mt-1">{{ mineOnly ? 'Únete a un evento para verlo aquí.' : '¡Crea el primero y organiza tu próximo meet!' }}</p>
       </div>
 
       <div *ngIf="!loading && events.length > 0" class="space-y-4">
@@ -306,9 +327,24 @@ export class MarketplaceComponent implements OnInit {
               <p class="font-bold text-lg">{{ event.title || 'Evento sin nombre' }}</p>
               <p class="text-slate-400">{{ event.city || 'Ubicación no disponible' }}</p>
               <p class="text-sm text-yellow-400 mt-1">{{ event.event_date | date:'fullDate' }}</p>
+              <p class="text-xs text-slate-500 mt-1">
+                {{ event.attendees_count ?? 0 }} participante{{ (event.attendees_count ?? 0) !== 1 ? 's' : '' }}
+                <span *ngIf="event.max_participants && event.max_participants > 0"> / {{ event.max_participants }} max</span>
+              </p>
             </div>
-            <button class="px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/40 text-yellow-300 rounded-lg transition flex-shrink-0">
-              Unirse
+            <button
+              (click)="toggleJoin(event)"
+              [disabled]="joiningId === event.event_id"
+              class="px-4 py-2 rounded-lg transition flex-shrink-0 font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              [ngClass]="event.is_attending
+                ? 'bg-red-500/20 hover:bg-red-500/40 text-red-300 border border-red-500/40'
+                : 'bg-yellow-500/20 hover:bg-yellow-500/40 text-yellow-300 border border-yellow-500/40'"
+            >
+              <span *ngIf="joiningId !== event.event_id">{{ event.is_attending ? 'Abandonar' : 'Unirse' }}</span>
+              <span *ngIf="joiningId === event.event_id" class="flex items-center gap-1">
+                <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"/><path fill="currentColor" d="M4 12a8 8 0 018-8v8z" class="opacity-75"/></svg>
+                ...
+              </span>
             </button>
           </div>
         </div>
@@ -322,9 +358,16 @@ export class EventsComponent implements OnInit {
 
   loading = true;
   errorMessage = '';
+  mineOnly = false;
+  joiningId: number | null = null;
   events: EventKdd[] = [];
 
   ngOnInit(): void {
+    this.loadEvents();
+  }
+
+  setFilter(mineOnly: boolean): void {
+    this.mineOnly = mineOnly;
     this.loadEvents();
   }
 
@@ -332,11 +375,39 @@ export class EventsComponent implements OnInit {
     this.loadEvents();
   }
 
+  toggleJoin(event: EventKdd): void {
+    if (this.joiningId !== null) return;
+    this.joiningId = event.event_id;
+
+    const req = event.is_attending
+      ? this.http.delete<{ message: string; attendees_count: number }>(`${API_CONFIG.BASE_URL}/kdds/${event.event_id}/join`)
+      : this.http.post<{ message: string; attendees_count: number }>(`${API_CONFIG.BASE_URL}/kdds/${event.event_id}/join`, {});
+
+    req.subscribe({
+      next: (res) => {
+        event.is_attending = !event.is_attending;
+        event.attendees_count = res.attendees_count;
+        this.joiningId = null;
+        if (this.mineOnly && !event.is_attending) {
+          this.events = this.events.filter(e => e.event_id !== event.event_id);
+        }
+      },
+      error: () => {
+        this.joiningId = null;
+      },
+    });
+  }
+
   private loadEvents(): void {
     this.loading = true;
     this.errorMessage = '';
 
-    this.http.get<PaginatedResponse<EventKdd>>(`${API_CONFIG.BASE_URL}/kdds`).subscribe({
+    let params = new HttpParams();
+    if (this.mineOnly) {
+      params = params.set('mine', '1');
+    }
+
+    this.http.get<PaginatedResponse<EventKdd>>(`${API_CONFIG.BASE_URL}/kdds`, { params }).subscribe({
       next: (response) => {
         this.events = response.data ?? [];
         this.loading = false;
@@ -361,33 +432,48 @@ export class EventsComponent implements OnInit {
   imports: [CommonModule, RelativeTimePipe],
   template: `
     <div class="p-8">
-      <div class="mb-6 flex items-center justify-between">
+      <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <h2 class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">El Universo</h2>
         <div class="flex gap-2">
-          <button
-            class="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition"
-          >
+          <button class="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition">
             + Crear post
           </button>
-          <button
-            (click)="reload()"
-            class="px-3 py-2 rounded-lg border bg-slate-800/60 border-slate-700 text-slate-200 text-sm hover:bg-slate-700/60"
-          >
+          <button (click)="reload()" class="px-3 py-2 rounded-lg border bg-slate-800/60 border-slate-700 text-slate-200 text-sm hover:bg-slate-700/60">
             Recargar
           </button>
         </div>
       </div>
 
+      <!-- Filtros -->
+      <div class="mb-6 flex gap-2">
+        <button
+          (click)="setFilter(false)"
+          class="px-4 py-2 rounded-lg border text-sm font-semibold transition"
+          [ngClass]="!mineOnly ? 'bg-purple-500/20 border-purple-400 text-purple-200' : 'bg-slate-800/60 border-slate-700 text-slate-300'"
+        >
+          Todos los posts
+        </button>
+        <button
+          (click)="setFilter(true)"
+          class="px-4 py-2 rounded-lg border text-sm font-semibold transition"
+          [ngClass]="mineOnly ? 'bg-purple-500/20 border-purple-400 text-purple-200' : 'bg-slate-800/60 border-slate-700 text-slate-300'"
+        >
+          Mis posts
+        </button>
+      </div>
+
       <!-- Skeleton loader -->
-      <div *ngIf="loading" class="space-y-4">
-        <div *ngFor="let i of [1,2,3]" class="bg-slate-800/50 p-6 rounded-lg border border-slate-700 animate-pulse">
-          <div class="flex items-start gap-4">
-            <div class="w-10 h-10 rounded-full bg-slate-700/60 flex-shrink-0"></div>
-            <div class="flex-1 space-y-3">
-              <div class="h-4 bg-slate-700/60 rounded w-1/4"></div>
-              <div class="h-3 bg-slate-700/60 rounded w-3/4"></div>
-              <div class="h-3 bg-slate-700/60 rounded w-1/2"></div>
+      <div *ngIf="loading" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div *ngFor="let i of [1,2,3,4,5,6]" class="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700 animate-pulse">
+          <div class="h-48 bg-slate-700/60"></div>
+          <div class="p-4 space-y-3">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full bg-slate-700/60"></div>
+              <div class="h-3 bg-slate-700/60 rounded w-1/3"></div>
             </div>
+            <div class="h-4 bg-slate-700/60 rounded w-3/4"></div>
+            <div class="h-3 bg-slate-700/60 rounded w-full"></div>
+            <div class="h-3 bg-slate-700/60 rounded w-2/3"></div>
           </div>
         </div>
       </div>
@@ -396,42 +482,49 @@ export class EventsComponent implements OnInit {
         {{ errorMessage }}
       </div>
 
-      <div *ngIf="!loading" class="mb-4 text-sm text-slate-400">
+      <div *ngIf="!loading && !errorMessage" class="mb-4 text-sm text-slate-400">
         Total publicaciones: <span class="text-slate-100 font-semibold">{{ total }}</span>
       </div>
 
       <!-- Empty state -->
       <div *ngIf="!loading && posts.length === 0 && !errorMessage" class="flex flex-col items-center justify-center py-20 text-slate-400">
         <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="mb-4 text-slate-600"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-        <p class="text-lg font-semibold text-slate-300">No hay publicaciones todavía</p>
-        <p class="text-sm mt-1">¡Sé el primero en compartir algo con la comunidad!</p>
+        <p class="text-lg font-semibold text-slate-300">{{ mineOnly ? 'Aún no has publicado nada' : 'No hay publicaciones todavía' }}</p>
+        <p class="text-sm mt-1">{{ mineOnly ? 'Crea tu primer post y compártelo con la comunidad.' : '¡Sé el primero en compartir algo!' }}</p>
       </div>
 
-      <div *ngIf="!loading && posts.length > 0" class="space-y-4">
-        <article *ngFor="let post of posts" class="post-card bg-slate-800/50 p-6 rounded-lg border border-slate-700 hover:border-purple-500/50 transition hover:scale-[1.02] transition-transform">
-          <div class="flex items-start gap-4">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 uppercase select-none">
-              {{ getInitial(post.author?.username) }}
-            </div>
-            <div class="flex-1">
-              <p class="font-bold">{{ post.author?.username || 'Usuario' }}</p>
-              <p *ngIf="post.title" class="text-sm text-slate-300 mt-1">{{ post.title }}</p>
-              <p class="text-slate-400 mt-2">{{ post.content_excerpt }}</p>
-
-              <img
-                *ngIf="post.media?.media_url"
-                [src]="post.media?.media_url"
-                alt="post media"
-                class="mt-3 w-full max-h-72 object-cover rounded-lg border border-slate-700"
-              />
-
-              <div class="flex gap-4 mt-3 text-slate-500 text-xs">
-                <span *ngIf="post.created_at" class="flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  {{ post.created_at | relativeTime }}
-                </span>
+      <!-- Grid de tarjetas -->
+      <div *ngIf="!loading && posts.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <article *ngFor="let post of posts" class="post-card bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700 hover:border-purple-500/50 transition hover:scale-[1.02]">
+          <!-- Imagen o placeholder -->
+          <div class="h-48 bg-slate-900 relative">
+            <img
+              *ngIf="getMedia(post) as imgUrl; else noMedia"
+              [src]="imgUrl"
+              [alt]="post.title || 'Post'"
+              class="h-full w-full object-cover"
+            />
+            <ng-template #noMedia>
+              <div class="h-full w-full flex items-center justify-center bg-gradient-to-br from-purple-900/40 to-pink-900/40">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500/60"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
               </div>
+            </ng-template>
+          </div>
+
+          <!-- Contenido -->
+          <div class="p-4">
+            <!-- Autor -->
+            <div class="flex items-center gap-2 mb-3">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 uppercase select-none">
+                {{ getInitial(post.author?.username) }}
+              </div>
+              <span class="text-sm font-semibold text-slate-200">{{ post.author?.username || 'Usuario' }}</span>
+              <span *ngIf="post.created_at" class="ml-auto text-xs text-slate-500">{{ post.created_at | relativeTime }}</span>
             </div>
+
+            <!-- Título y excerpt -->
+            <p *ngIf="post.title" class="font-bold text-slate-100 mb-1 line-clamp-1">{{ post.title }}</p>
+            <p class="text-sm text-slate-400 line-clamp-3">{{ post.content_excerpt }}</p>
           </div>
         </article>
       </div>
@@ -445,9 +538,15 @@ export class UniverseComponent implements OnInit {
   loading = true;
   total = 0;
   errorMessage = '';
+  mineOnly = false;
   posts: UniversePost[] = [];
 
   ngOnInit(): void {
+    this.loadPosts();
+  }
+
+  setFilter(mineOnly: boolean): void {
+    this.mineOnly = mineOnly;
     this.loadPosts();
   }
 
@@ -460,18 +559,30 @@ export class UniverseComponent implements OnInit {
     return username.charAt(0).toUpperCase();
   }
 
+  getMedia(post: UniversePost): string | null {
+    const m = post.media;
+    if (!m) return null;
+    if (Array.isArray(m)) return (m[0] as AdvertMedia)?.media_url ?? null;
+    return (m as AdvertMedia).media_url ?? null;
+  }
+
   private loadPosts(): void {
     this.loading = true;
     this.errorMessage = '';
 
-    this.http.get<PaginatedResponse<UniversePost>>(`${API_CONFIG.BASE_URL}/social`).subscribe({
+    let params = new HttpParams();
+    if (this.mineOnly) {
+      params = params.set('mine', '1');
+    }
+
+    this.http.get<PaginatedResponse<UniversePost>>(`${API_CONFIG.BASE_URL}/social`, { params }).subscribe({
       next: (response) => {
         this.posts = response.data ?? [];
         this.total = response.meta?.total ?? response.total ?? this.posts.length;
         this.loading = false;
         setTimeout(() => {
           gsap.from(this.el.nativeElement.querySelectorAll('.post-card'), {
-            y: 25, opacity: 0, duration: 0.4, stagger: 0.09, ease: 'power2.out', clearProps: 'all'
+            y: 30, opacity: 0, duration: 0.45, stagger: 0.07, ease: 'power2.out', clearProps: 'all'
           });
         }, 0);
       },

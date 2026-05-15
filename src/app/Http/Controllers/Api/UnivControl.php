@@ -12,15 +12,20 @@ class UnivControl extends Controller
 {
     /**
      * Obtener listado general (solo datos más importantes).
+     * Acepta query param ?mine=1 para filtrar solo posts del usuario autenticado.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // En el listado general evitamos cargar todos los comentarios o motores enteros
-        $posts = Post::with(['author:user_id,user_name,profile_picture', 'media', 'model.make'])
+        $query = Post::with(['author:user_id,user_name,profile_picture', 'media', 'model.make'])
             ->where('visible', true)
-            ->whereNull('onDeleteRequest')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->whereNull('onDeleteRequest');
+
+        if ($request->boolean('mine') && $request->user('sanctum')) {
+            $userId = $request->user('sanctum')->user_id;
+            $query->where('author_id', $userId);
+        }
+
+        $posts = $query->orderBy('created_at', 'desc')->paginate(20);
 
         return UnivPostSummaryResource::collection($posts);
     }
