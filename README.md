@@ -1,4 +1,39 @@
 # IntellCar_IntermodularProject
+## 🚗 What is IntellCar?
+
+IntellCar is much more than a car website; it is the ultimate meeting point for motor enthusiasts. It is a 360º platform where you can do everything from buying your next vehicle to sharing photos of your road trips or meeting up with people who share your same passion.
+
+To help you understand it better, the app is divided into four main "districts":
+
+### 1. 🏁 Marketplace: Your next road companion
+This is our buying and selling zone, but with a professional touch. Here, listings are not just photos and a price; they are categorized by **Paddocks** (lifestyles).
+
+* **How it works:** You can search for cars by filtering by brand, horsepower, or even by their "vibe" (are you looking for a classic to pamper or a 4x4 to get muddy?).
+* **Direct contact:** If you like a car, you have a contact button to speak directly with the seller via email or phone. No detours.
+
+### 2. 📅 Events (Kdds): From the phone to the asphalt
+What is the point of having a spectacular car if you have no one to enjoy it with? This section is for socializing in the real world.
+
+* **Create and attend:** Any user can organize a "Kdd" (meetup), set a point on the map, a date, and a time.
+* **Community:** You can see who else is attending, what cars they will bring, and sign up with a single click. It is the perfect place to put a face to the people in your Paddock.
+
+### 3. 🌌 The Universe: Your gasoline-powered Social Network
+This is the feed where passion lives. Forget about food photos; here, there is only metal, tires, and landscapes.
+
+* **Quality content:** Users (enthusiasts, owners, and even industry journalists) publish their stories, photos of their latest modifications, or articles about motor news.
+* **Interaction:** You can "like" and follow other users to keep up with what is happening in their garage or on their routes.
+
+### 4. 🛠️ My Garage: Your personal pride
+This is your private showcase within the app. It is the space where you show the world which machines have passed through your hands.
+
+* **Your history:** You can add the cars you currently own and also those you had in the past (your "exes").
+* **Personalization:** Give them a nickname, upload their best photo, and tell their story. It is your introduction to the community: when someone views your profile, they will know exactly what kind of petrolhead you are.
+
+---
+
+**In short:** IntellCar is the place you enter to look for a car, but you stay for the people, the stories, and the routes. It is the vertex where everything with an engine comes to life!
+
+# IntellCar_ProyectoIntermodular
 Proyecto Intermodular DAW 2025-2026 Juan Benítez y José M. Villanúa
 
 🚗 ¿Qué es IntellCar?

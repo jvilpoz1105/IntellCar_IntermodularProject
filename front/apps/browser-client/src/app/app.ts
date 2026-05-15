@@ -1,68 +1,35 @@
-import { Component, signal, afterNextRender } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { HlmButton } from '@spartan-ng/helm/button';
-import { HlmBadge } from '@spartan-ng/helm/badge';
-import {
-	HlmCard,
-	HlmCardContent,
-	HlmCardDescription,
-	HlmCardFooter,
-	HlmCardHeader,
-	HlmCardTitle,
-} from '@spartan-ng/helm/card';
-import { animate, spring } from 'motion';
-import { gsap } from 'gsap';
+import { Component, inject, ElementRef, OnInit } from '@angular/core';
+import { Router, RouterOutlet, NavigationStart, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import gsap from 'gsap';
 
 @Component({
 	selector: 'app-root',
 	standalone: true,
-	imports: [
-		RouterOutlet,
-		HlmButton,
-		HlmBadge,
-		HlmCard,
-		HlmCardContent,
-		HlmCardDescription,
-		HlmCardFooter,
-		HlmCardHeader,
-		HlmCardTitle,
-	],
+	imports: [RouterOutlet],
 	templateUrl: './app.html',
 	styleUrl: './app.css',
 })
-export class App {
-	protected readonly title = signal('browser-client');
+export class App implements OnInit {
+	private router = inject(Router);
+	private el = inject(ElementRef);
 
-	constructor() {
-		afterNextRender(() => {
-			// Motion: Entrada suave de la tarjeta principal
-			animate(
-				'#welcome-card',
-				{ 
-					opacity: 1, 
-					y: 0,
-					scale: 1 
-				},
-				{ 
-					duration: 0.8
-				}
-			);
+	ngOnInit(): void {
+		this.router.events.pipe(
+			filter(e => e instanceof NavigationStart)
+		).subscribe(() => {
+			gsap.to(this.el.nativeElement, { opacity: 0, duration: 0.18, ease: 'power1.in' });
+		});
 
-			// GSAP: Efecto de flotación para el badge de "En Desarrollo"
-			gsap.to('#dev-badge', {
-				y: -6,
-				duration: 2,
-				repeat: -1,
-				yoyo: true,
-				ease: 'power1.inOut',
-			});
-
-			// Animación extra: Los botones aparecen con un pequeño retraso
-			animate(
-				'button',
-				{ opacity: 1, y: 0 },
-				{ delay: 0.5, duration: 0.5 }
+		this.router.events.pipe(
+			filter(e => e instanceof NavigationEnd)
+		).subscribe(() => {
+			gsap.fromTo(
+				this.el.nativeElement,
+				{ opacity: 0, y: 12 },
+				{ opacity: 1, y: 0, duration: 0.28, ease: 'power2.out', clearProps: 'transform' }
 			);
 		});
 	}
 }
+

@@ -24,6 +24,8 @@ class EventKdd extends Model
         'latitude',
         'longitude',
         'max_participants',
+        'onDeleteRequest',
+        'visible',
     ];
 
     protected $casts = [
@@ -32,6 +34,8 @@ class EventKdd extends Model
         'updated_at' => 'datetime',
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
+        'onDeleteRequest' => 'datetime',
+        'visible' => 'boolean',
     ];
 
     /**
@@ -50,6 +54,6 @@ class EventKdd extends Model
     public function attendees()
     {
         return $this->belongsToMany(AppUser::class, 'event_attendance', 'event_id', 'user_id')
-                    ->withTimestamps();
+                    ->withPivot('joined_at');
     }
 }

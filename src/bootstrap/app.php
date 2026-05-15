@@ -13,7 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role' => \App\Http\Middleware\CheckUserTag::class,
+            'role'      => \App\Http\Middleware\CheckUserTag::class,
+            'admin.web' => \App\Http\Middleware\AdminWebMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

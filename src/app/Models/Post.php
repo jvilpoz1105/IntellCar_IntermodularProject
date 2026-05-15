@@ -18,11 +18,15 @@ class Post extends Model
         'content',
         'model_id',
         'engine_id',
+        'onDeleteRequest',
+        'visible',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'onDeleteRequest' => 'datetime',
+        'visible' => 'boolean',
     ];
 
     /**
@@ -56,7 +60,7 @@ class Post extends Model
     public function likes()
     {
         return $this->belongsToMany(AppUser::class, 'post_like', 'post_id', 'user_id')
-                    ->withTimestamps();
+                    ->withPivot('created_at');
     }
 
     public function comments()

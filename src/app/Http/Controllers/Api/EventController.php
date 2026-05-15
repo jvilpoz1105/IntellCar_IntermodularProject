@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\EventKdd;
 use Illuminate\Http\Request;
+use OpenApi\Annotations as OA;
 
 class EventController extends Controller
 {

@@ -7,6 +7,7 @@ use App\Models\AppUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use OpenApi\Annotations as OA;
 
 /**
  * @OA\Info(

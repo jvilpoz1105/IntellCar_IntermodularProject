@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Paddock;
 use Illuminate\Http\Request;
+use OpenApi\Annotations as OA;
 
 class PaddockController extends Controller
 {

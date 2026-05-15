@@ -24,6 +24,8 @@ class AppUser extends Authenticatable
         'user_tag',
         'is_active',
         'paddock_id',
+        'profile_picture',
+        'onDeleteRequest',
     ];
 
     protected $hidden = [
@@ -33,6 +35,7 @@ class AppUser extends Authenticatable
     protected $casts = [
         'is_active' => 'boolean',
         'registration_date' => 'datetime',
+        'onDeleteRequest' => 'datetime',
     ];
 
     /**
@@ -41,6 +44,15 @@ class AppUser extends Authenticatable
     public function getAuthPassword()
     {
         return $this->user_password;
+    }
+
+    /**
+     * La tabla app_user no tiene columna remember_token.
+     * Devolver cadena vacía deshabilita la funcionalidad.
+     */
+    public function getRememberTokenName(): string
+    {
+        return '';
     }
 
     /**
@@ -69,19 +81,19 @@ class AppUser extends Authenticatable
     public function likes()
     {
         return $this->belongsToMany(Post::class, 'post_like', 'user_id', 'post_id')
-                    ->withTimestamps();
+                    ->withPivot('created_at');
     }
 
     public function following()
     {
         return $this->belongsToMany(AppUser::class, 'user_follow', 'follower_id', 'followed_id')
-                    ->withTimestamps();
+                    ->withPivot('created_at');
     }
 
     public function followers()
     {
         return $this->belongsToMany(AppUser::class, 'user_follow', 'followed_id', 'follower_id')
-                    ->withTimestamps();
+                    ->withPivot('created_at');
     }
 
     public function garage()
@@ -107,6 +119,6 @@ class AppUser extends Authenticatable
     public function attendingEvents()
     {
         return $this->belongsToMany(EventKdd::class, 'event_attendance', 'user_id', 'event_id')
-                    ->withTimestamps();
+                    ->withPivot('joined_at');
     }
 }
