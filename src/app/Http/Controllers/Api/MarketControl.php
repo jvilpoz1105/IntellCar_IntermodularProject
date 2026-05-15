@@ -137,6 +137,8 @@ class MarketControl extends Controller
             'city'             => 'required|string|max:100',
             'model_id'         => 'required|exists:car_model,model_id',
             'engine_id'        => 'required|exists:car_engine,engine_id',
+            'paddock_ids'      => 'nullable|array',
+            'paddock_ids.*'    => 'integer|exists:paddock,paddock_id',
             'ai_metadata'      => 'nullable|array',
             'media'            => 'nullable|array',
             'media.*'          => 'string'
@@ -168,6 +170,11 @@ class MarketControl extends Controller
             'ai_metadata'      => $validated['ai_metadata'] ?? null,
         ]);
 
+        // Asociar el anuncio a los paddocks seleccionados (moods)
+        if (!empty($validated['paddock_ids'])) {
+            $advert->moods()->sync($validated['paddock_ids']);
+        }
+
         // Guardar las referencias de multimedia (ya subidas a S3 desde el front)
         if ($request->has('media')) {
             foreach ($request->input('media') as $mediaUrl) {
@@ -180,7 +187,7 @@ class MarketControl extends Controller
 
         return response()->json([
             'message' => 'Anuncio creado exitosamente',
-            'advert'  => $advert->load(['model.make', 'engine', 'media']),
+            'advert'  => $advert->load(['model.make', 'engine', 'media', 'moods']),
         ], 201);
     }
 

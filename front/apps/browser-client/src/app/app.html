@@ -57,4 +57,19 @@
   (close)="togglePublishModal()"
 ></app-publish-modal>
 
+<app-social-modal
+  *ngIf="isSocialModalOpen()"
+  (close)="toggleSocialModal()"
+></app-social-modal>
+
+<app-kdd-modal
+  *ngIf="isKddModalOpen()"
+  (close)="toggleKddModal()"
+></app-kdd-modal>
+
+<app-garage-modal
+  *ngIf="isGarageModalOpen()"
+  (close)="toggleGarageModal()"
+></app-garage-modal>
+
 <router-outlet />

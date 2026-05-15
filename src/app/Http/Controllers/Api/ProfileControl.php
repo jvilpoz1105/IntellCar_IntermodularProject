@@ -89,34 +89,40 @@ class ProfileControl extends Controller
     public function addGarageItem(Request $request)
     {
         $validated = $request->validate([
-            'model_id' => 'required|exists:car_model,model_id',
-            'motor_id' => 'nullable|exists:car_engine,engine_id',
-            'car_nickname' => 'nullable|string|max:50',
-            'description' => 'nullable|string',
-            'is_current_car' => 'boolean',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048'
+            'model_id'      => 'required|exists:car_model,model_id',
+            'motor_id'      => 'nullable|exists:car_engine,engine_id',
+            'car_nickname'  => 'nullable|string|max:50',
+            'description'   => 'nullable|string',
+            'is_current_car'=> 'boolean',
+            'photo'         => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'photo_url'     => 'nullable|string|url',  // URL S3 (alternativa a photo)
         ]);
 
         $path = null;
         if ($request->hasFile('photo')) {
+            // Subida multipart tradicional
             $path = $request->file('photo')->store('garage', 'public');
+        } elseif (!empty($validated['photo_url'])) {
+            // URL ya subida a S3 desde el front
+            $path = $validated['photo_url'];
         }
 
         $garageItem = $request->user()->garage()->create([
-            'model_id' => $validated['model_id'],
-            'motor_id' => $validated['motor_id'] ?? null,
-            'car_nickname' => $validated['car_nickname'] ?? null,
-            'description' => $validated['description'] ?? null,
-            'is_current_car' => $validated['is_current_car'] ?? false,
-            'photo_url' => $path,
-            'verified_owner' => false,
+            'model_id'      => $validated['model_id'],
+            'motor_id'      => $validated['motor_id'] ?? null,
+            'car_nickname'  => $validated['car_nickname'] ?? null,
+            'description'   => $validated['description'] ?? null,
+            'is_current_car'=> $validated['is_current_car'] ?? false,
+            'photo_url'     => $path,
+            'verified_owner'=> false,
         ]);
 
         return response()->json([
-            'message' => 'Vehículo añadido al garaje',
-            'garage_item' => $garageItem
+            'message'     => 'Vehículo añadido al garaje',
+            'garage_item' => $garageItem->load(['model.make'])
         ], 201);
     }
+
 
     /**
      * Actualizar un vehículo del garaje

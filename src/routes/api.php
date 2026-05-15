@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\UnivControl;
 use App\Http\Controllers\Api\KddControl;
 use App\Http\Controllers\Api\ProfileControl;
 use App\Http\Controllers\Api\RekoControl;
+use App\Http\Controllers\Api\MakeController;
+use App\Http\Controllers\Api\PaddockController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +25,12 @@ Route::prefix('auth')->group(function () {
 });
 
 // --- RUTAS PÚBLICAS DE SERVICIOS (Lectura) ---
+
+// Catálogo de vehículos (público - sin token)
+Route::get('/makes', [MakeController::class, 'index']);
+Route::get('/makes/{id}/models', [MakeController::class, 'models']);
+Route::get('/makes/{id}/engines', [MakeController::class, 'engines']);
+Route::get('/paddocks', [PaddockController::class, 'index']);
 
 // Market (Anuncios)
 Route::get('/market', [MarketControl::class, 'index']);

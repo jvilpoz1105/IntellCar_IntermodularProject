@@ -8,14 +8,27 @@ import { firstValueFrom } from 'rxjs';
   providedIn: 'root'
 })
 export class PublishService {
-  // Configuración de la API (Usando variables de entorno)
   private readonly API_BASE = environment.apiUrl;
   private mediaItems = signal<UploadedMedia[]>([]);
 
   // Selectors
   readonly items = computed(() => this.mediaItems());
-  readonly isUploading = computed(() => this.mediaItems().some(i => i.status === 'uploading' || i.status === 'analyzing'));
-  readonly hasValidMedia = computed(() => this.mediaItems().some(i => i.status === 'success'));
+  readonly isUploading = computed(() =>
+    this.mediaItems().some(i => i.status === 'uploading' || i.status === 'analyzing')
+  );
+  readonly hasValidMedia = computed(() =>
+    this.mediaItems().some(i => i.status === 'success')
+  );
+  /** Bloquea el submit si alguna imagen fue rechazada por Rekognition */
+  readonly hasRejectedMedia = computed(() =>
+    this.mediaItems().some(i => i.status === 'error')
+  );
+  /** URLs S3 de imágenes aprobadas para enviar al backend */
+  readonly approvedMediaUrls = computed(() =>
+    this.mediaItems()
+      .filter(i => i.status === 'success' && i.s3Url)
+      .map(i => i.s3Url!)
+  );
 
   constructor(private http: HttpClient) {}
 
@@ -57,14 +70,16 @@ export class PublishService {
         this.http.post(`${this.API_BASE}/media/analyze`, { key: presigned.key })
       );
 
-      // 4. Actualizar con los resultados de la IA
-      this.mediaItems.update(prev => prev.map(i => 
-        i.id === item.id 
-          ? { 
-              ...i, 
-              status: 'success', 
-              labels: analysis.all_labels?.map((l: any) => l.name) 
-            } 
+      // 4. Actualizar con los resultados — guardar s3Url y s3Key
+      this.mediaItems.update(prev => prev.map(i =>
+        i.id === item.id
+          ? {
+              ...i,
+              status: 'success',
+              s3Key: presigned.key,
+              s3Url: presigned.public_url ?? presigned.upload_url?.split('?')[0],
+              labels: analysis.all_labels?.map((l: any) => l.name)
+            }
           : i
       ));
 
@@ -75,7 +90,7 @@ export class PublishService {
   }
 
   private updateStatus(id: string, status: UploadedMedia['status']) {
-    this.mediaItems.update(prev => prev.map(i => 
+    this.mediaItems.update(prev => prev.map(i =>
       i.id === id ? { ...i, status } : i
     ));
   }

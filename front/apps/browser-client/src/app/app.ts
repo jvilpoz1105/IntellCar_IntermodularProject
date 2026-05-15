@@ -13,6 +13,9 @@ import {
 import { animate, spring } from 'motion';
 import { gsap } from 'gsap';
 import { PublishModalComponent } from './features/publish/publish-modal/publish-modal.component';
+import { SocialModalComponent } from './features/publish/social-modal/social-modal.component';
+import { KddModalComponent } from './features/publish/kdd-modal/kdd-modal.component';
+import { GarageModalComponent } from './features/publish/garage-modal/garage-modal.component';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -29,6 +32,9 @@ import { CommonModule } from '@angular/common';
 		HlmCardHeader,
 		HlmCardTitle,
 		PublishModalComponent,
+		SocialModalComponent,
+		KddModalComponent,
+		GarageModalComponent,
 		CommonModule
 	],
 	templateUrl: './app.html',
@@ -36,7 +42,12 @@ import { CommonModule } from '@angular/common';
 })
 export class App {
 	protected readonly title = signal('browser-client');
+
+	// Señales de visibilidad para cada modal
 	public readonly isPublishModalOpen = signal(false);
+	public readonly isSocialModalOpen  = signal(false);
+	public readonly isKddModalOpen     = signal(false);
+	public readonly isGarageModalOpen  = signal(false);
 
 	constructor() {
 		afterNextRender(() => {
@@ -71,8 +82,8 @@ export class App {
 		});
 	}
 
-	togglePublishModal() {
-		console.log('Toggle Modal:', !this.isPublishModalOpen());
-		this.isPublishModalOpen.update(v => !v);
-	}
+	togglePublishModal() { this.isPublishModalOpen.update(v => !v); }
+	toggleSocialModal()  { this.isSocialModalOpen.update(v => !v); }
+	toggleKddModal()     { this.isKddModalOpen.update(v => !v); }
+	toggleGarageModal()  { this.isGarageModalOpen.update(v => !v); }
 }
