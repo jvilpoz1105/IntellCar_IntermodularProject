@@ -151,7 +151,7 @@ interface ProfileDetail {
       </div>
 
       <div *ngIf="!loading && adverts.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        <article *ngFor="let advert of adverts" class="advert-card bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700 hover:border-cyan-500/50 transition hover:scale-[1.02] transition-transform">
+        <article *ngFor="let advert of adverts" (click)="openDetail(advert.advert_id)" class="advert-card cursor-pointer bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700 hover:border-cyan-500/50 transition hover:scale-[1.02] transition-transform">
           <div class="h-48 bg-slate-900">
             <img
               *ngIf="getCover(advert) as imageUrl; else noImage"
@@ -176,6 +176,49 @@ interface ProfileDetail {
             </div>
           </div>
         </article>
+      </div>
+
+      <!-- Marketplace Detail Modal -->
+      <div *ngIf="selected || detailLoading" class="fixed inset-0 z-50 flex items-center justify-center p-4" (click)="closeDetail()">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+        <div class="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-slate-900 rounded-xl border border-slate-700 shadow-2xl" (click)="$event.stopPropagation()">
+          <div *ngIf="detailLoading" class="flex items-center justify-center p-16">
+            <svg class="animate-spin text-cyan-400" xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"/><path fill="currentColor" d="M4 12a8 8 0 018-8v8z" class="opacity-75"/></svg>
+          </div>
+          <ng-container *ngIf="selected && !detailLoading">
+            <div class="relative h-64 bg-slate-950 rounded-t-xl overflow-hidden">
+              <img *ngIf="getFirstMedia(selected.media) as img; else noDetailImg" [src]="img" [alt]="selected.ad_title" class="h-full w-full object-cover"/>
+              <ng-template #noDetailImg><div class="h-full flex items-center justify-center text-slate-600 text-sm">Sin imágenes</div></ng-template>
+              <button (click)="closeDetail()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center text-sm font-bold transition">✕</button>
+            </div>
+            <div class="p-6 space-y-4">
+              <div class="flex items-start justify-between gap-4 flex-wrap">
+                <h3 class="text-xl font-bold text-slate-100">{{ selected.ad_title }}</h3>
+                <span class="px-3 py-1.5 bg-green-900/70 border border-green-600/50 rounded-lg text-green-300 text-xl font-black tracking-tight flex-shrink-0">{{ selected.price | number:'1.0-0' }} €</span>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <span *ngIf="selected.model?.make?.make_name" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs text-slate-300">{{ selected.model.make.make_name }} {{ selected.model?.model_name }}</span>
+                <span *ngIf="selected.year_manufacture" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs text-slate-300">{{ selected.year_manufacture }}</span>
+                <span *ngIf="selected.kilometers" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs text-slate-300">{{ selected.kilometers | number }} km</span>
+                <span *ngIf="selected.car_color" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs text-slate-300 capitalize">{{ selected.car_color }}</span>
+                <span *ngIf="selected.ad_type" class="px-2 py-1 bg-blue-900/60 border border-blue-700/50 rounded text-xs text-blue-300 uppercase">{{ selected.ad_type }}</span>
+              </div>
+              <p *ngIf="selected.city || selected.region" class="text-slate-400 text-sm">📍 {{ selected.city }}{{ (selected.city && selected.region) ? ', ' : '' }}{{ selected.region }}</p>
+              <div *ngIf="selected.engine" class="bg-slate-800/60 rounded-lg p-4 text-sm space-y-1">
+                <p class="font-semibold text-slate-200 mb-2">Motor</p>
+                <p *ngIf="selected.engine.displacement_cc" class="text-slate-300">Cilindrada: {{ selected.engine.displacement_cc }} cc</p>
+                <p *ngIf="selected.engine.power_hp" class="text-slate-300">Potencia: {{ selected.engine.power_hp }} CV</p>
+                <p *ngIf="selected.engine.fuel_type" class="text-slate-300">Combustible: {{ selected.engine.fuel_type }}</p>
+                <p *ngIf="selected.engine.transmission" class="text-slate-300">Transmisión: {{ selected.engine.transmission }}</p>
+              </div>
+              <div *ngIf="selected.ad_details" class="bg-slate-800/40 rounded-lg p-4">
+                <p class="text-sm font-semibold text-slate-300 mb-2">Descripción</p>
+                <p class="text-slate-400 text-sm whitespace-pre-wrap">{{ selected.ad_details }}</p>
+              </div>
+              <p *ngIf="selected.seller?.user_name" class="text-xs text-slate-500 pt-2 border-t border-slate-800">Vendedor: {{ selected.seller.user_name }}</p>
+            </div>
+          </ng-container>
+        </div>
       </div>
     </div>
   `,
@@ -219,6 +262,29 @@ export class MarketplaceComponent implements OnInit {
 
   getCover(advert: MarketplaceAdvert): string | null {
     return advert.media?.media_url ?? null;
+  }
+
+  selected: any = null;
+  detailLoading = false;
+
+  openDetail(id: number): void {
+    this.selected = null;
+    this.detailLoading = true;
+    this.http.get<any>(`${API_CONFIG.BASE_URL}/market/${id}`).subscribe({
+      next: (data) => { this.selected = (data as any).data ?? data; this.detailLoading = false; },
+      error: () => { this.detailLoading = false; },
+    });
+  }
+
+  closeDetail(): void {
+    this.selected = null;
+    this.detailLoading = false;
+  }
+
+  getFirstMedia(media: any): string | null {
+    if (!media) return null;
+    if (Array.isArray(media)) return media[0]?.media_url ?? null;
+    return media.media_url ?? null;
   }
 
   private loadAdverts(): void {
@@ -318,7 +384,7 @@ export class MarketplaceComponent implements OnInit {
       </div>
 
       <div *ngIf="!loading && events.length > 0" class="space-y-4">
-        <div *ngFor="let event of events" class="event-card bg-slate-800/50 p-6 rounded-lg border border-slate-700 hover:border-yellow-500/50 transition hover:scale-[1.02] transition-transform">
+        <div *ngFor="let event of events" (click)="openDetail(event.event_id)" class="event-card cursor-pointer bg-slate-800/50 p-6 rounded-lg border border-slate-700 hover:border-yellow-500/50 transition hover:scale-[1.02] transition-transform">
           <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-lg bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center text-yellow-400 flex-shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
@@ -333,7 +399,7 @@ export class MarketplaceComponent implements OnInit {
               </p>
             </div>
             <button
-              (click)="toggleJoin(event)"
+              (click)="$event.stopPropagation(); toggleJoin(event)"
               [disabled]="joiningId === event.event_id"
               class="px-4 py-2 rounded-lg transition flex-shrink-0 font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               [ngClass]="event.is_attending
@@ -349,6 +415,45 @@ export class MarketplaceComponent implements OnInit {
           </div>
         </div>
       </div>
+
+      <!-- Events Detail Modal -->
+      <div *ngIf="selected || detailLoading" class="fixed inset-0 z-50 flex items-center justify-center p-4" (click)="closeDetail()">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+        <div class="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-slate-900 rounded-xl border border-slate-700 shadow-2xl" (click)="$event.stopPropagation()">
+          <div *ngIf="detailLoading" class="flex items-center justify-center p-16">
+            <svg class="animate-spin text-yellow-400" xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"/><path fill="currentColor" d="M4 12a8 8 0 018-8v8z" class="opacity-75"/></svg>
+          </div>
+          <ng-container *ngIf="selected && !detailLoading">
+            <div class="p-6 space-y-4">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="text-2xl font-bold text-slate-100">{{ selected.title }}</h3>
+                <button (click)="closeDetail()" class="flex-shrink-0 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold transition">✕</button>
+              </div>
+              <div class="flex flex-wrap gap-2 text-sm">
+                <span class="px-2 py-1 bg-yellow-900/40 border border-yellow-700/50 rounded text-yellow-300">📅 {{ selected.event_date | date:'fullDate' }}</span>
+                <span *ngIf="selected.city || selected.location_name" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-slate-300">📍 {{ selected.location_name || selected.city }}</span>
+                <span *ngIf="selected.address" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-slate-400 text-xs">{{ selected.address }}</span>
+              </div>
+              <div class="flex gap-4 text-sm text-slate-400">
+                <span *ngIf="selected.paddock?.paddock_name">Paddock: <span class="text-slate-200">{{ selected.paddock.paddock_name }}</span></span>
+                <span *ngIf="selected.max_participants > 0">Plazas: <span class="text-slate-200">{{ selected.attendees?.length ?? 0 }} / {{ selected.max_participants }}</span></span>
+              </div>
+              <div *ngIf="selected.event_description" class="bg-slate-800/40 rounded-lg p-4">
+                <p class="text-sm font-semibold text-slate-300 mb-2">Descripción</p>
+                <p class="text-slate-400 text-sm whitespace-pre-wrap">{{ selected.event_description }}</p>
+              </div>
+              <div *ngIf="selected.attendees?.length" class="space-y-2">
+                <p class="text-sm font-semibold text-slate-300">Participantes ({{ selected.attendees.length }})</p>
+                <div class="flex flex-wrap gap-2">
+                  <span *ngFor="let att of selected.attendees.slice(0, 12)" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs text-slate-300">{{ att.user_name }}</span>
+                  <span *ngIf="selected.attendees.length > 12" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs text-slate-500">+{{ selected.attendees.length - 12 }} más</span>
+                </div>
+              </div>
+              <p *ngIf="selected.creator?.user_name" class="text-xs text-slate-500 pt-2 border-t border-slate-800">Organizado por: <span class="text-slate-300">{{ selected.creator.user_name }}</span></p>
+            </div>
+          </ng-container>
+        </div>
+      </div>
     </div>
   `,
 })
@@ -360,6 +465,8 @@ export class EventsComponent implements OnInit {
   errorMessage = '';
   mineOnly = false;
   joiningId: number | null = null;
+  selected: any = null;
+  detailLoading = false;
   events: EventKdd[] = [];
 
   ngOnInit(): void {
@@ -373,6 +480,20 @@ export class EventsComponent implements OnInit {
 
   reload(): void {
     this.loadEvents();
+  }
+
+  openDetail(id: number): void {
+    this.selected = null;
+    this.detailLoading = true;
+    this.http.get<any>(`${API_CONFIG.BASE_URL}/kdds/${id}`).subscribe({
+      next: (data) => { this.selected = (data as any).data ?? data; this.detailLoading = false; },
+      error: () => { this.detailLoading = false; },
+    });
+  }
+
+  closeDetail(): void {
+    this.selected = null;
+    this.detailLoading = false;
   }
 
   toggleJoin(event: EventKdd): void {
@@ -495,7 +616,7 @@ export class EventsComponent implements OnInit {
 
       <!-- Grid de tarjetas -->
       <div *ngIf="!loading && posts.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        <article *ngFor="let post of posts" class="post-card bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700 hover:border-purple-500/50 transition hover:scale-[1.02]">
+        <article *ngFor="let post of posts" (click)="openDetail(post.post_id)" class="post-card cursor-pointer bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700 hover:border-purple-500/50 transition hover:scale-[1.02]">
           <!-- Imagen o placeholder -->
           <div class="h-48 bg-slate-900 relative">
             <img
@@ -528,6 +649,47 @@ export class EventsComponent implements OnInit {
           </div>
         </article>
       </div>
+
+      <!-- Universe Detail Modal -->
+      <div *ngIf="selected || detailLoading" class="fixed inset-0 z-50 flex items-center justify-center p-4" (click)="closeDetail()">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+        <div class="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-slate-900 rounded-xl border border-slate-700 shadow-2xl" (click)="$event.stopPropagation()">
+          <div *ngIf="detailLoading" class="flex items-center justify-center p-16">
+            <svg class="animate-spin text-purple-400" xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"/><path fill="currentColor" d="M4 12a8 8 0 018-8v8z" class="opacity-75"/></svg>
+          </div>
+          <ng-container *ngIf="selected && !detailLoading">
+            <div *ngIf="getFirstMedia(selected.media)" class="relative h-56 bg-slate-950 rounded-t-xl overflow-hidden">
+              <img [src]="getFirstMedia(selected.media)" [alt]="selected.title || 'Post'" class="h-full w-full object-cover"/>
+            </div>
+            <div class="p-6 space-y-4">
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 uppercase">{{ getInitial(selected.author?.user_name) }}</div>
+                  <div>
+                    <p class="font-semibold text-slate-200">{{ selected.author?.user_name || 'Usuario' }}</p>
+                    <p class="text-xs text-slate-500">{{ selected.created_at | date:'medium' }}</p>
+                  </div>
+                </div>
+                <button (click)="closeDetail()" class="flex-shrink-0 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold transition">✕</button>
+              </div>
+              <h3 *ngIf="selected.title" class="text-xl font-bold text-slate-100">{{ selected.title }}</h3>
+              <p class="text-slate-300 text-sm whitespace-pre-wrap leading-relaxed">{{ selected.content }}</p>
+              <div class="flex items-center gap-4 text-slate-500 text-sm pt-2 border-t border-slate-800">
+                <span>❤️ {{ selected.likes?.length ?? 0 }} me gusta</span>
+                <span>💬 {{ selected.comments?.length ?? 0 }} comentario{{ (selected.comments?.length ?? 0) !== 1 ? 's' : '' }}</span>
+              </div>
+              <div *ngIf="selected.comments?.length" class="space-y-3">
+                <p class="text-sm font-semibold text-slate-300">Comentarios</p>
+                <div *ngFor="let comment of selected.comments.slice(0, 5)" class="bg-slate-800/50 rounded-lg p-3">
+                  <p class="text-xs font-semibold text-slate-300 mb-1">{{ comment.user?.user_name || 'Usuario' }}</p>
+                  <p class="text-xs text-slate-400">{{ comment.content }}</p>
+                </div>
+                <p *ngIf="selected.comments.length > 5" class="text-xs text-slate-500">y {{ selected.comments.length - 5 }} comentarios más...</p>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
     </div>
   `,
 })
@@ -539,6 +701,8 @@ export class UniverseComponent implements OnInit {
   total = 0;
   errorMessage = '';
   mineOnly = false;
+  selected: any = null;
+  detailLoading = false;
   posts: UniversePost[] = [];
 
   ngOnInit(): void {
@@ -564,6 +728,26 @@ export class UniverseComponent implements OnInit {
     if (!m) return null;
     if (Array.isArray(m)) return (m[0] as AdvertMedia)?.media_url ?? null;
     return (m as AdvertMedia).media_url ?? null;
+  }
+
+  getFirstMedia(media: any): string | null {
+    if (!media) return null;
+    if (Array.isArray(media)) return media[0]?.media_url ?? null;
+    return media.media_url ?? null;
+  }
+
+  openDetail(id: number): void {
+    this.selected = null;
+    this.detailLoading = true;
+    this.http.get<any>(`${API_CONFIG.BASE_URL}/social/${id}`).subscribe({
+      next: (data) => { this.selected = (data as any).data ?? data; this.detailLoading = false; },
+      error: () => { this.detailLoading = false; },
+    });
+  }
+
+  closeDetail(): void {
+    this.selected = null;
+    this.detailLoading = false;
   }
 
   private loadPosts(): void {
