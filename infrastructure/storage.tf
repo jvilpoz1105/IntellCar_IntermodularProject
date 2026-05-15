@@ -31,6 +31,8 @@ resource "aws_s3_bucket_public_access_block" "media_access" {
 resource "aws_s3_bucket_policy" "media_policy" {
   bucket = aws_s3_bucket.intellcar_media.id
 
+  depends_on = [aws_s3_bucket_public_access_block.media_access]
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
