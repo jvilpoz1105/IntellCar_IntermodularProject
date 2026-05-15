@@ -22,7 +22,7 @@ class UnivPostSummaryResource extends JsonResource
             'author' => $this->whenLoaded('author', function() {
                 return [
                     'user_id' => $this->author->user_id ?? $this->author->id,
-                    'username' => $this->author->username,
+                    'username' => $this->author->user_name,
                     'profile_picture' => $this->author->profile_picture,
                 ];
             }),
