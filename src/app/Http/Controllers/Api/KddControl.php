@@ -16,7 +16,7 @@ class KddControl extends Controller
     public function index()
     {
         // En la vista general mostramos creador y paddock, sin cargar los asistentes completos
-        $events = EventKdd::with(['creator:user_id,username,profile_picture', 'paddock'])
+        $events = EventKdd::with(['creator:user_id,user_name,profile_picture', 'paddock'])
             ->where('event_date', '>=', now())
             ->where('visible', true)
             ->whereNull('onDeleteRequest')

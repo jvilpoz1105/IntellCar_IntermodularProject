@@ -16,7 +16,7 @@ class UnivControl extends Controller
     public function index()
     {
         // En el listado general evitamos cargar todos los comentarios o motores enteros
-        $posts = Post::with(['author:user_id,username,profile_picture', 'media', 'model.make'])
+        $posts = Post::with(['author:user_id,user_name,profile_picture', 'media', 'model.make'])
             ->where('visible', true)
             ->whereNull('onDeleteRequest')
             ->orderBy('created_at', 'desc')
