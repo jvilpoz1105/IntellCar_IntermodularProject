@@ -143,6 +143,10 @@ export class AuthService {
     return this.currentUser$.asObservable();
   }
 
+  refreshUser(): void {
+    this.loadCurrentUser();
+  }
+
   isAuthenticated(): Observable<boolean> {
     return this.isAuthenticated$.asObservable();
   }

@@ -712,6 +712,7 @@ export class ProfileComponent implements OnInit {
         this.isSaving = false;
         this.isEditing = false;
         this.successMessage = 'Perfil actualizado correctamente.';
+        this.authService.refreshUser();
         this.loadProfile();
       },
       error: () => {
