@@ -12,7 +12,7 @@ services:
     build: .
     container_name: intellcar_api
     ports:
-      - "80:80"     # Producción: Puerto HTTP directo
+      - "8080:80"     # Producción: Puerto HTTP directo
     volumes:
       - ./src:/var/www/html
     restart: unless-stopped
