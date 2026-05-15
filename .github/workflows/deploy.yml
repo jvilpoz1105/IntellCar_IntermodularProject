@@ -152,3 +152,18 @@ jobs:
             docker exec intellcar_api php artisan config:cache
             docker exec intellcar_api php artisan route:cache
             docker exec intellcar_api php artisan view:cache
+
+            # ── 7. Configuración SSL (Certbot) ──
+            # Intentamos generar el certificado. Si falla (por DNS), no bloqueamos el deploy.
+            sudo certbot --nginx -d ${{ secrets.DOMAIN_NAME }} --non-interactive --agree-tos --email ${{ secrets.USER_EMAIL }} || echo "Certbot falló, se reintentará en el próximo push o manualmente."
+
+            # ── 8. Sincronización del Frontend ──
+            # Bajamos los archivos del S3 a la carpeta de Nginx
+            # Usamos las credenciales que ya tiene el servidor o el IAM Profile
+            sudo aws s3 sync s3://${{ env.S3_BUCKET_FRONTEND }} /var/www/html/ --delete
+            sudo chown -R www-data:www-data /var/www/html
+            sudo chmod -R 755 /var/www/html
+
+            # ── 9. Reinicio final de Nginx para aplicar cambios ──
+            sudo systemctl restart nginx
+
