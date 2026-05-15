@@ -79,6 +79,11 @@ interface ProfileDetail {
         <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Marketplace</h2>
         <div class="flex gap-2">
           <button
+            class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition"
+          >
+            + Crear anuncio
+          </button>
+          <button
             (click)="setVisibleOnly(true)"
             class="px-3 py-2 rounded-lg border text-sm"
             [ngClass]="visibleOnly ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200' : 'bg-slate-800/60 border-slate-700 text-slate-300'"
@@ -231,7 +236,14 @@ export class MarketplaceComponent implements OnInit {
   imports: [CommonModule],
   template: `
     <div class="p-8">
-      <h2 class="text-3xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">Eventos</h2>
+      <div class="mb-6 flex items-center justify-between">
+        <h2 class="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">Eventos</h2>
+        <button
+          class="px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white text-sm font-semibold transition"
+        >
+          + Crear evento
+        </button>
+      </div>
       <div class="space-y-4">
         <div *ngFor="let i of [1,2,3,4]" class="bg-slate-800/50 p-6 rounded-lg border border-slate-700 hover:border-yellow-500/50 transition">
           <div class="flex items-center gap-4">
@@ -260,12 +272,19 @@ export class EventsComponent {}
     <div class="p-8">
       <div class="mb-6 flex items-center justify-between">
         <h2 class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">El Universo</h2>
-        <button
-          (click)="reload()"
-          class="px-3 py-2 rounded-lg border bg-slate-800/60 border-slate-700 text-slate-200 text-sm hover:bg-slate-700/60"
-        >
-          Recargar
-        </button>
+        <div class="flex gap-2">
+          <button
+            class="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition"
+          >
+            + Crear post
+          </button>
+          <button
+            (click)="reload()"
+            class="px-3 py-2 rounded-lg border bg-slate-800/60 border-slate-700 text-slate-200 text-sm hover:bg-slate-700/60"
+          >
+            Recargar
+          </button>
+        </div>
       </div>
 
       <div *ngIf="loading" class="rounded-lg border border-slate-700 bg-slate-800/50 p-4 text-slate-300 mb-4">
