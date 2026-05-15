@@ -33,8 +33,8 @@ interface NavItem {
       <!-- User Profile Section -->
       <div class="px-6 py-4 border-b border-slate-700/50">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-lg">
-            {{ getAvatar() }}
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 uppercase select-none">
+            {{ getInitial(currentUser?.user_name) }}
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-semibold text-slate-100 truncate">{{ currentUser?.user_name || 'Usuario' }}</p>
@@ -135,12 +135,9 @@ export class SidebarComponent {
     });
   }
 
-  getAvatar(): string {
-    if (!this.currentUser) return '👤';
-    // Generar un emoji basado en el ID del usuario
-    const avatars = ['👨‍💼', '🏎️', '👩‍🔧', '🚗', '📰', '👨‍🔧', '👩'];
-    const hash = this.currentUser.user_id % avatars.length;
-    return avatars[hash];
+  getInitial(username?: string): string {
+    if (!username) return '?';
+    return username.charAt(0).toUpperCase();
   }
 
   onProfile(): void {
