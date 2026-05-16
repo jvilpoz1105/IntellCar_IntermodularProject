@@ -21,12 +21,11 @@ class ModelSpecFactory extends Factory
             ['key' => 'Capacidad Maletero', 'unit' => 'L'],
         ];
 
-        $faker = \Faker\Factory::create();
-        $spec = $faker->randomElement($specs);
+        $spec = fake()->randomElement($specs);
 
         return [
             'sp_key' => $spec['key'],
-            'sp_value' => (string)$faker->randomFloat(1, 4, 600),
+            'sp_value' => (string)fake()->randomFloat(1, 4, 600),
             'measurement_unit' => $spec['unit'],
             'variable_type' => 'numeric',
             'sp_model' => CarModel::query()->inRandomOrder()->value('model_id') ?? CarModel::factory(),
