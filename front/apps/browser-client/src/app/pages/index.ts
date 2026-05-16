@@ -6,6 +6,11 @@ import { AuthService, User } from '../core/services/auth.service';
 import { API_CONFIG } from '../core/config/api.config';
 import gsap from 'gsap';
 import { RelativeTimePipe } from '../shared/pipes/relative-time.pipe';
+import { PublishModalComponent } from '../features/publish/publish-modal/publish-modal.component';
+import { SocialModalComponent } from '../features/publish/social-modal/social-modal.component';
+import { KddModalComponent } from '../features/publish/kdd-modal/kdd-modal.component';
+import { GarageModalComponent } from '../features/publish/garage-modal/garage-modal.component';
+import { signal } from '@angular/core';
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -74,17 +79,27 @@ interface ProfileDetail {
 @Component({
   selector: 'app-marketplace',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PublishModalComponent],
   template: `
     <div class="p-8">
       <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Marketplace</h2>
         <div class="flex gap-2">
           <button
+            (click)="showPublishModal.set(true)"
             class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition"
           >
             + Crear anuncio
           </button>
+          
+          <!-- Modal de Publicación -->
+          @if (showPublishModal()) {
+            <app-publish-modal 
+              type="market" 
+              (close)="showPublishModal.set(false)"
+              (published)="onPublished()"
+            />
+          }
           <button
             (click)="setVisibleOnly(true)"
             class="px-3 py-2 rounded-lg border text-sm"
@@ -181,6 +196,7 @@ export class MarketplaceComponent implements OnInit {
   private http = inject(HttpClient);
   private el = inject(ElementRef);
 
+  showPublishModal = signal(false);
   loading = true;
   total = 0;
   errorMessage = '';
@@ -211,6 +227,11 @@ export class MarketplaceComponent implements OnInit {
   }
 
   reload(): void {
+    this.loadAdverts();
+  }
+
+  onPublished(): void {
+    this.showPublishModal.set(false);
     this.loadAdverts();
   }
 
@@ -256,15 +277,25 @@ export class MarketplaceComponent implements OnInit {
 @Component({
   selector: 'app-events',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, KddModalComponent],
   template: `
     <div class="p-8">
       <div class="mb-6 flex items-center justify-between">
         <h2 class="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">Eventos</h2>
         <div class="flex gap-2">
-          <button class="px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white text-sm font-semibold transition">
+          <button 
+            (click)="showKddModal.set(true)"
+            class="px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white text-sm font-semibold transition">
             + Crear evento
           </button>
+
+          <!-- Modal de Eventos -->
+          @if (showKddModal()) {
+            <app-kdd-modal 
+              (close)="showKddModal.set(false)"
+              (published)="onPublished()"
+            />
+          }
           <button (click)="reload()" class="px-3 py-2 rounded-lg border bg-slate-800/60 border-slate-700 text-slate-200 text-sm hover:bg-slate-700/60">
             Recargar
           </button>
@@ -320,6 +351,7 @@ export class EventsComponent implements OnInit {
   private http = inject(HttpClient);
   private el = inject(ElementRef);
 
+  showKddModal = signal(false);
   loading = true;
   errorMessage = '';
   events: EventKdd[] = [];
@@ -329,6 +361,11 @@ export class EventsComponent implements OnInit {
   }
 
   reload(): void {
+    this.loadEvents();
+  }
+
+  onPublished(): void {
+    this.showKddModal.set(false);
     this.loadEvents();
   }
 
@@ -358,17 +395,26 @@ export class EventsComponent implements OnInit {
 @Component({
   selector: 'app-universe',
   standalone: true,
-  imports: [CommonModule, RelativeTimePipe],
+  imports: [CommonModule, RelativeTimePipe, SocialModalComponent],
   template: `
     <div class="p-8">
       <div class="mb-6 flex items-center justify-between">
         <h2 class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">El Universo</h2>
         <div class="flex gap-2">
           <button
+            (click)="showSocialModal.set(true)"
             class="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition"
           >
             + Crear post
           </button>
+
+          <!-- Modal Social -->
+          @if (showSocialModal()) {
+            <app-social-modal 
+              (close)="showSocialModal.set(false)"
+              (published)="onPublished()"
+            />
+          }
           <button
             (click)="reload()"
             class="px-3 py-2 rounded-lg border bg-slate-800/60 border-slate-700 text-slate-200 text-sm hover:bg-slate-700/60"
@@ -442,6 +488,7 @@ export class UniverseComponent implements OnInit {
   private http = inject(HttpClient);
   private el = inject(ElementRef);
 
+  showSocialModal = signal(false);
   loading = true;
   total = 0;
   errorMessage = '';
@@ -452,6 +499,11 @@ export class UniverseComponent implements OnInit {
   }
 
   reload(): void {
+    this.loadPosts();
+  }
+
+  onPublished(): void {
+    this.showSocialModal.set(false);
     this.loadPosts();
   }
 
@@ -488,15 +540,25 @@ export class UniverseComponent implements OnInit {
 @Component({
   selector: 'app-garage',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, GarageModalComponent],
   template: `
     <div class="p-8">
       <h2 class="text-3xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">Mi Garaje</h2>
       <div class="mb-6">
-        <button class="px-6 py-3 bg-orange-500/20 hover:bg-orange-500/40 text-orange-300 rounded-lg transition font-bold">
+        <button 
+          (click)="showGarageModal.set(true)"
+          class="px-6 py-3 bg-orange-500/20 hover:bg-orange-500/40 text-orange-300 rounded-lg transition font-bold">
           + Agregar Vehículo
         </button>
       </div>
+
+      <!-- Modal Garaje -->
+      @if (showGarageModal()) {
+        <app-garage-modal 
+          (close)="showGarageModal.set(false)"
+          (published)="onPublished()"
+        />
+      }
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div *ngFor="let car of ['Mi Nissan R34', 'Subaru STI', 'Toyota Supra']" class="bg-slate-800/50 rounded-lg overflow-hidden border border-orange-500/30 hover:border-orange-500/80 transition">
           <div class="h-40 bg-gradient-to-br from-orange-600 to-red-900 flex items-center justify-center text-5xl">🏎️</div>
@@ -510,7 +572,14 @@ export class UniverseComponent implements OnInit {
     </div>
   `,
 })
-export class GarageComponent {}
+export class GarageComponent {
+  showGarageModal = signal(false);
+
+  onPublished(): void {
+    this.showGarageModal.set(false);
+    // TODO: Recargar lista del garaje si fuera necesario
+  }
+}
 
 @Component({
   selector: 'app-profile',
