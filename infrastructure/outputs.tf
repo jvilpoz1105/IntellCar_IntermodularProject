@@ -1,4 +1,4 @@
-# Para que Terraform te escupa la IP pública al terminar
+# Para que Terraform te 'escupa' la IP pública al terminar
 output "server_public_ip" {
   value = aws_eip.web_ip.public_ip
 }
