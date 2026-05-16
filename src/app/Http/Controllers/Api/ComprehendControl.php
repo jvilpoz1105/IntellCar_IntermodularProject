@@ -40,14 +40,15 @@ class ComprehendControl extends Controller
 
     public function analyzeText(Request $request): JsonResponse
     {
+        $request->validate([
+            'text' => 'required|string|max:4800',
+        ]);
+
+        $text = $request->input('text');
+
         try {
             $this->initAwsClient();
 
-            $request->validate([
-                'text' => 'required|string|max:4800',
-            ]);
-
-            $text = $request->input('text');
             $languageCode = 'es'; // default
 
             // 1. Detección de Idioma
@@ -157,10 +158,37 @@ class ComprehendControl extends Controller
             ]);
 
         } catch (\Throwable $e) {
+            // Loguear el fallo de AWS Comprehend (por ejemplo, restricciones de AWS Learner Lab)
+            \Log::warning("AWS Comprehend no está disponible (usando fallback local): " . $e->getMessage());
+
+            // --- FALLBACK LOCAL ---
+            // 1. Detección de PII (Emails y teléfonos españoles/internacionales)
+            if (preg_match('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', $text) || 
+                preg_match('/(\+34|0034|34)?[ -]*(6|7|8|9)[ -]*([0-9][ -]*){8}/', $text)) {
+                return response()->json([
+                    'is_valid' => false,
+                    'error' => "🚨 Por tu seguridad y privacidad, no incluyas datos personales (email o teléfono) en tu publicación.",
+                    'status' => 'error'
+                ], 422);
+            }
+
+            // 2. Detección de palabras malsonantes (Moderación local básica)
+            $badWords = ['mierda', 'cabron', 'cabrón', 'puto', 'puta', 'joder', 'polla', 'coño', 'gilipollas', 'maricon', 'maricón', 'hijoputa'];
+            $pattern = '/\b(' . implode('|', $badWords) . ')\b/i';
+            if (preg_match($pattern, $text)) {
+                return response()->json([
+                    'is_valid' => false,
+                    'error' => "🚨 Lenguaje no permitido: Se ha detectado contenido inapropiado o palabras malsonantes en el texto.",
+                    'status' => 'error'
+                ], 422);
+            }
+
+            // 3. Si pasa la validación local, permitir continuar con un warning amigable informando del modo local
             return response()->json([
-                'error' => 'FALLO_COMPREHEND',
-                'mensaje_ia' => $e->getMessage(),
-            ], 500);
+                'is_valid' => true,
+                'status' => 'warning',
+                'warning' => '⚠️ (Modo local de moderación) AWS Comprehend no está disponible por restricciones de cuenta (Learner Lab), pero tu texto ha sido validado con éxito localmente.'
+            ]);
         }
     }
 }
