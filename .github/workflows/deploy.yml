@@ -64,7 +64,7 @@ jobs:
             --delete
 
   # ─────────────────────────────────────────────────────
-  # JOB 2: Deploy de la API Laravel en EC2 (Docker) -  
+  # JOB 2: Deploy de la API Laravel en EC2 (Docker) - 
   # ─────────────────────────────────────────────────────
   deploy-api:
     name: 🔧 Deploy API (EC2 + Docker)
