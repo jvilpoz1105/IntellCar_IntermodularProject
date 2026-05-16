@@ -19,6 +19,7 @@ class CarAdvertFilter extends ApiFilter
         'year'   => ['lte', 'gte'],
         'region' => ['eq', 'like'],
         'city'   => ['eq', 'like'],
+        'seller' => ['eq'],
 
         // ── Relacionales simples ──────────────────────────────────────────────
         'make'   => ['eq', 'like'],   // Marca  (model → make)
@@ -45,6 +46,7 @@ class CarAdvertFilter extends ApiFilter
         'year'   => 'year_manufacture',
         'region' => 'region',
         'city'   => 'city',
+        'seller' => 'seller_id',
 
         // Relacionales: <relacion>.<columna>
         'make'   => 'model.make.make_name',

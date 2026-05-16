@@ -15,7 +15,7 @@ class ProfileControl extends Controller
      */
     public function show(Request $request)
     {
-        $user = $request->user()->load(['paddock', 'garage']);
+        $user = $request->user()->load(['paddock', 'garage', 'adverts', 'posts']);
         return response()->json($user);
     }
 
