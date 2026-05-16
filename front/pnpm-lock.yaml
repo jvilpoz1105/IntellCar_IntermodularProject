@@ -127,6 +127,16 @@ importers:
         specifier: ~5.9.2
         version: 5.9.2
 
+  packages/aws-storage:
+    dependencies:
+      rxjs:
+        specifier: ^7.8.0
+        version: 7.8.2
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.2
+
   packages/eslint-config:
     devDependencies:
       '@eslint/js':

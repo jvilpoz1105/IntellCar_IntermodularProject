@@ -1,7 +1,20 @@
 # Configuración del Bucket S3 para las fotos
 # 1. Bucket para las fotos de los anuncios, posts y garaje
 resource "aws_s3_bucket" "intellcar_media" {
-  bucket = "intellcar-media-tfg-jose" # El nombre debe ser único en todo AWS
+  bucket        = "intellcar-media-tfg-jose" # El nombre debe ser único en todo AWS
+  force_destroy = true                       # Permite borrar el bucket aunque contenga archivos (Útil en desarrollo)
+}
+
+resource "aws_s3_bucket_cors_configuration" "media_cors" {
+  bucket = aws_s3_bucket.intellcar_media.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST", "GET"]
+    allowed_origins = ["*"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
 }
 
 # Configuración para que las fotos sean accesibles desde la App
@@ -18,6 +31,8 @@ resource "aws_s3_bucket_public_access_block" "media_access" {
 resource "aws_s3_bucket_policy" "media_policy" {
   bucket = aws_s3_bucket.intellcar_media.id
 
+  depends_on = [aws_s3_bucket_public_access_block.media_access]
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -33,7 +48,8 @@ resource "aws_s3_bucket_policy" "media_policy" {
 
 # 2. Bucket para el despliegue de Angular (Static Website)
 resource "aws_s3_bucket" "angular_frontend" {
-  bucket = "intellcar-web-tfg-jose"
+  bucket        = "intellcar-web-tfg-jose"
+  force_destroy = true # Permite borrar el bucket aunque contenga archivos (Útil en desarrollo)
 }
 
 resource "aws_s3_bucket_website_configuration" "angular_config" {
