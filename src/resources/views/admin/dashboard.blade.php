@@ -15,6 +15,10 @@
         ['label' => 'Anuncios totales',        'value' => $stats['total_adverts'],         'color' => 'indigo'],
         ['label' => 'Anuncios visibles',       'value' => $stats['visible_adverts'],       'color' => 'teal'],
         ['label' => 'Pend. borrado (ads)',     'value' => $stats['pending_delete_ads'],    'color' => 'red'],
+        ['label' => 'Eventos totales',         'value' => $stats['total_events'],          'color' => 'purple'],
+        ['label' => 'Eventos visibles',        'value' => $stats['visible_events'],        'color' => 'teal'],
+        ['label' => 'Posts totales',           'value' => $stats['total_posts'],           'color' => 'orange'],
+        ['label' => 'Posts visibles',          'value' => $stats['visible_posts'],         'color' => 'teal'],
     ];
     @endphp
 
@@ -78,6 +82,56 @@
             </div>
             @empty
             <p class="px-6 py-4 text-sm text-slate-500">Sin anuncios registrados aún.</p>
+            @endforelse
+        </div>
+    </div>
+
+</div>
+
+{{-- Latest events + posts --}}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+
+    {{-- Últimos eventos --}}
+    <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-700">
+            <h2 class="font-semibold text-sm text-slate-200">Últimos eventos creados</h2>
+            <a href="{{ route('admin.events.index') }}" class="text-xs text-orange-400 hover:text-orange-300">Ver todos →</a>
+        </div>
+        <div class="divide-y divide-slate-700">
+            @forelse ($latest_events as $event)
+            <div class="flex items-center justify-between px-6 py-3">
+                <div>
+                    <p class="text-sm font-medium text-slate-200 truncate max-w-[200px]">{{ $event->title }}</p>
+                    <p class="text-xs text-slate-500">{{ $event->creator?->user_name ?? '—' }} · {{ $event->city }}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-400">{{ $event->event_date?->format('d/m/Y') ?? '—' }}</span>
+                    <span class="w-2 h-2 rounded-full {{ $event->visible ? 'bg-emerald-400' : 'bg-slate-600' }}"></span>
+                </div>
+            </div>
+            @empty
+            <p class="px-6 py-4 text-sm text-slate-500">Sin eventos creados aún.</p>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- Últimos posts --}}
+    <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-700">
+            <h2 class="font-semibold text-sm text-slate-200">Últimos posts publicados</h2>
+            <a href="{{ route('admin.posts.index') }}" class="text-xs text-orange-400 hover:text-orange-300">Ver todos →</a>
+        </div>
+        <div class="divide-y divide-slate-700">
+            @forelse ($latest_posts as $post)
+            <div class="flex items-center justify-between px-6 py-3">
+                <div>
+                    <p class="text-sm font-medium text-slate-200 truncate max-w-[200px]">{{ $post->title }}</p>
+                    <p class="text-xs text-slate-500">{{ $post->author?->user_name ?? '—' }}</p>
+                </div>
+                <span class="w-2 h-2 rounded-full {{ $post->visible ? 'bg-emerald-400' : 'bg-slate-600' }}"></span>
+            </div>
+            @empty
+            <p class="px-6 py-4 text-sm text-slate-500">Sin posts publicados aún.</p>
             @endforelse
         </div>
     </div>
