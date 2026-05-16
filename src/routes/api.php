@@ -116,7 +116,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/social/{id}', [UnivControl::class, 'destroy'])->middleware('role:admin');
     Route::delete('/kdds/{id}', [KddControl::class, 'destroy'])->middleware('role:admin');
 
-    // --- MEDIA & TEXT AI ANALYSIS (Protegidos) ---
+    // --- MEDIA & TEXT AI ANALYSIS (Protegidos) --- DESCOMENTAR PARA USAR EN PRODUCCIÓN!
     // // Route::post('/media/presigned', [RekoControl::class, 'presigned']);
     // // Route::post('/media/analyze', [RekoControl::class, 'analyze']);
     // // Route::post('/text/analyze', [ComprehendControl::class, 'analyzeText']);
