@@ -22,16 +22,16 @@ class AppUserFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_name' => fake()->name(),
-            'email_address' => fake()->unique()->safeEmail(),
-            'contact_email' => fake()->safeEmail(),
-            'address' => fake()->address(),
-            'phone' => '+34'.fake()->unique()->numerify('6########'),
+            'user_name' => $this->faker->name(),
+            'email_address' => $this->faker->unique()->safeEmail(),
+            'contact_email' => $this->faker->safeEmail(),
+            'address' => $this->faker->address(),
+            'phone' => '+34'.$this->faker->unique()->numerify('6########'),
             'user_password' => Hash::make('password123'),
-            'user_tag' => fake()->randomElement(['admin', 'pro', 'indv', 'press']),
-            'registration_date' => fake()->dateTimeBetween('-2 years', 'now'),
-            'is_active' => fake()->boolean(90),
-            'paddock_id' => fake()->boolean(80)
+            'user_tag' => $this->faker->randomElement(['admin', 'pro', 'indv', 'press']),
+            'registration_date' => $this->faker->dateTimeBetween('-2 years', 'now'),
+            'is_active' => $this->faker->boolean(90),
+            'paddock_id' => $this->faker->boolean(80)
                 ? (Paddock::query()->inRandomOrder()->value('paddock_id') ?? Paddock::factory())
                 : null,
         ];

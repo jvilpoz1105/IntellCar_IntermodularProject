@@ -178,6 +178,7 @@ jobs:
                     proxy_set_header Connection 'upgrade';
                     proxy_set_header Host $host;
                     proxy_cache_bypass $http_upgrade;
+                }
             }
             EOF
             sudo ln -sf /etc/nginx/sites-available/intellcar /etc/nginx/sites-enabled/
