@@ -86,9 +86,9 @@ jobs:
               cd ..
             fi
 
-            # 2. Limpiar y Clonar rama jose
+            # 2. Limpiar y Clonar rama main (Donde están nuestros fixes)
             rm -rf /home/ubuntu/intellcar-project
-            git clone -b jose https://github.com/${{ github.repository }}.git /home/ubuntu/intellcar-project
+            git clone -b main https://github.com/${{ github.repository }}.git /home/ubuntu/intellcar-project
             cd /home/ubuntu/intellcar-project
 
             # ── 3. Crear el .env de PRODUCCIÓN dinámicamente ──
@@ -183,6 +183,9 @@ jobs:
             EOF
             sudo ln -sf /etc/nginx/sites-available/intellcar /etc/nginx/sites-enabled/
             sudo rm -f /etc/nginx/sites-enabled/default
+            # Limpiar puertos bloqueados antes de arrancar Nginx
+            sudo fuser -k 80/tcp || true
+            sudo fuser -k 443/tcp || true
             sudo nginx -t && sudo systemctl restart nginx
 
             # ── 7. Configuración SSL (Certbot) ──
@@ -197,5 +200,7 @@ jobs:
             sudo chmod -R 755 /var/www/html
 
             # ── 9. Reinicio final de Nginx para aplicar cambios ──
+            sudo fuser -k 80/tcp || true
+            sudo fuser -k 443/tcp || true
             sudo systemctl restart nginx
 
