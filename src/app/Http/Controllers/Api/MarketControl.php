@@ -13,15 +13,22 @@ class MarketControl extends Controller
     /**
      * Obtener listado general (solo datos más importantes).
      */
-    public function index()
+    public function index(Request $request)
     {
         // Para el listado general traemos solo las relaciones básicas (modelo, fotos).
         // Evitamos sobrecargar con motor, detalles complejos o todos los estados de ánimo (moods).
-        $adverts = CarAdvert::with(['model.make', 'media'])
-            ->where('visible', true)
-            ->whereNull('onDeleteRequest')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $query = CarAdvert::with(['model.make', 'media'])
+            ->whereNull('onDeleteRequest');
+
+        if ($request->boolean('visible', true)) {
+            $query->where('visible', true);
+        }
+
+        if ($request->filled('ad_type')) {
+            $query->where('ad_type', $request->input('ad_type'));
+        }
+
+        $adverts = $query->orderBy('created_at', 'desc')->paginate(20);
 
         return MarketAdvertSummaryResource::collection($adverts);
     }
@@ -33,7 +40,7 @@ class MarketControl extends Controller
     {
         // Aquí sí traemos absolutamente todos los datos relacionados:
         // multimedia, características del motor, vendedor, estados (moods), etc.
-        $advert = CarAdvert::with(['model.make', 'engine', 'seller', 'media', 'moods'])->findOrFail($id);
+        $advert = CarAdvert::with(['model.make', 'engine.specs', 'seller', 'media', 'moods'])->findOrFail($id);
         
         return new MarketAdvertResource($advert);
     }

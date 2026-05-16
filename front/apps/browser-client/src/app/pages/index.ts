@@ -204,18 +204,68 @@ interface ProfileDetail {
                 <span *ngIf="selected.ad_type" class="px-2 py-1 bg-blue-900/60 border border-blue-700/50 rounded text-xs text-blue-300 uppercase">{{ selected.ad_type }}</span>
               </div>
               <p *ngIf="selected.city || selected.region" class="text-slate-400 text-sm">📍 {{ selected.city }}{{ (selected.city && selected.region) ? ', ' : '' }}{{ selected.region }}</p>
-              <div *ngIf="selected.engine" class="bg-slate-800/60 rounded-lg p-4 text-sm space-y-1">
-                <p class="font-semibold text-slate-200 mb-2">Motor</p>
-                <p *ngIf="selected.engine.displacement_cc" class="text-slate-300">Cilindrada: {{ selected.engine.displacement_cc }} cc</p>
-                <p *ngIf="selected.engine.power_hp" class="text-slate-300">Potencia: {{ selected.engine.power_hp }} CV</p>
-                <p *ngIf="selected.engine.fuel_type" class="text-slate-300">Combustible: {{ selected.engine.fuel_type }}</p>
-                <p *ngIf="selected.engine.transmission" class="text-slate-300">Transmisión: {{ selected.engine.transmission }}</p>
+              <div *ngIf="selected.engine" class="bg-slate-800/60 rounded-lg p-4 text-sm space-y-3">
+                <p class="font-semibold text-slate-200">Motor</p>
+                <!-- car_engine fields -->
+                <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-slate-300">
+                  <span *ngIf="selected.engine.engine_name" class="col-span-2 font-medium text-slate-100">{{ selected.engine.engine_name }}</span>
+                  <span *ngIf="selected.engine.engine_description" class="col-span-2 text-slate-400 italic">{{ selected.engine.engine_description }}</span>
+                  <span *ngIf="selected.engine.fuel_type" class="text-slate-400">Combustible:</span>
+                  <span *ngIf="selected.engine.fuel_type" class="capitalize">{{ selected.engine.fuel_type }}</span>
+                </div>
+                <!-- engine_spec table -->
+                <div *ngIf="selected.engine.specs && selected.engine.specs.length > 0">
+                  <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Especificaciones técnicas</p>
+                  <table class="w-full text-xs border-collapse">
+                    <thead>
+                      <tr class="border-b border-slate-700">
+                        <th class="text-left py-1 pr-3 text-slate-400 font-medium">Característica</th>
+                        <th class="text-left py-1 pr-3 text-slate-400 font-medium">Valor</th>
+                        <th class="text-left py-1 text-slate-400 font-medium">Unidad</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let spec of selected.engine.specs" class="border-b border-slate-700/40 hover:bg-slate-700/30">
+                        <td class="py-1 pr-3 text-slate-300">{{ spec.sp_key }}</td>
+                        <td class="py-1 pr-3 text-slate-100 font-medium">{{ spec.sp_value }}</td>
+                        <td class="py-1 text-slate-400">{{ spec.measurement_unit || '—' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p *ngIf="!selected.engine.specs || selected.engine.specs.length === 0" class="text-slate-500 text-xs italic">Sin especificaciones técnicas registradas.</p>
               </div>
               <div *ngIf="selected.ad_details" class="bg-slate-800/40 rounded-lg p-4">
                 <p class="text-sm font-semibold text-slate-300 mb-2">Descripción</p>
                 <p class="text-slate-400 text-sm whitespace-pre-wrap">{{ selected.ad_details }}</p>
               </div>
-              <p *ngIf="selected.seller?.user_name" class="text-xs text-slate-500 pt-2 border-t border-slate-800">Vendedor: {{ selected.seller.user_name }}</p>
+              <div *ngIf="selected.seller" class="border-t border-slate-800 pt-4">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Vendedor</p>
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center text-slate-300 font-bold text-sm flex-shrink-0">
+                    {{ selected.seller.user_name?.charAt(0)?.toUpperCase() }}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-slate-100 text-sm">{{ selected.seller.user_name }}</p>
+                    <div class="mt-1 space-y-1">
+                      <a *ngIf="selected.seller.contact_email || selected.seller.email_address"
+                         [href]="'mailto:' + (selected.seller.contact_email || selected.seller.email_address)"
+                         class="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition truncate"
+                         (click)="$event.stopPropagation()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                        {{ selected.seller.contact_email || selected.seller.email_address }}
+                      </a>
+                      <a *ngIf="selected.seller.phone"
+                         [href]="'tel:' + selected.seller.phone"
+                         class="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition"
+                         (click)="$event.stopPropagation()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.56 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        {{ selected.seller.phone }}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </ng-container>
         </div>
@@ -550,7 +600,7 @@ export class EventsComponent implements OnInit {
 @Component({
   selector: 'app-universe',
   standalone: true,
-  imports: [CommonModule, RelativeTimePipe],
+  imports: [CommonModule, FormsModule, RelativeTimePipe],
   template: `
     <div class="p-8">
       <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -568,18 +618,25 @@ export class EventsComponent implements OnInit {
       <!-- Filtros -->
       <div class="mb-6 flex gap-2">
         <button
-          (click)="setFilter(false)"
+          (click)="setFilter('all')"
           class="px-4 py-2 rounded-lg border text-sm font-semibold transition"
-          [ngClass]="!mineOnly ? 'bg-purple-500/20 border-purple-400 text-purple-200' : 'bg-slate-800/60 border-slate-700 text-slate-300'"
+          [ngClass]="postFilter === 'all' ? 'bg-purple-500/20 border-purple-400 text-purple-200' : 'bg-slate-800/60 border-slate-700 text-slate-300'"
         >
           Todos los posts
         </button>
         <button
-          (click)="setFilter(true)"
+          (click)="setFilter('mine')"
           class="px-4 py-2 rounded-lg border text-sm font-semibold transition"
-          [ngClass]="mineOnly ? 'bg-purple-500/20 border-purple-400 text-purple-200' : 'bg-slate-800/60 border-slate-700 text-slate-300'"
+          [ngClass]="postFilter === 'mine' ? 'bg-purple-500/20 border-purple-400 text-purple-200' : 'bg-slate-800/60 border-slate-700 text-slate-300'"
         >
           Mis posts
+        </button>
+        <button
+          (click)="setFilter('following')"
+          class="px-4 py-2 rounded-lg border text-sm font-semibold transition"
+          [ngClass]="postFilter === 'following' ? 'bg-purple-500/20 border-purple-400 text-purple-200' : 'bg-slate-800/60 border-slate-700 text-slate-300'"
+        >
+          Siguiendo
         </button>
       </div>
 
@@ -610,8 +667,8 @@ export class EventsComponent implements OnInit {
       <!-- Empty state -->
       <div *ngIf="!loading && posts.length === 0 && !errorMessage" class="flex flex-col items-center justify-center py-20 text-slate-400">
         <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="mb-4 text-slate-600"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-        <p class="text-lg font-semibold text-slate-300">{{ mineOnly ? 'Aún no has publicado nada' : 'No hay publicaciones todavía' }}</p>
-        <p class="text-sm mt-1">{{ mineOnly ? 'Crea tu primer post y compártelo con la comunidad.' : '¡Sé el primero en compartir algo!' }}</p>
+        <p class="text-lg font-semibold text-slate-300">{{ postFilter === 'mine' ? 'Aún no has publicado nada' : postFilter === 'following' ? 'No sigues a nadie todavía' : 'No hay publicaciones todavía' }}</p>
+        <p class="text-sm mt-1">{{ postFilter === 'mine' ? 'Crea tu primer post y compártelo con la comunidad.' : postFilter === 'following' ? 'Sigue a otros usuarios para ver sus posts aquí.' : '¡Sé el primero en compartir algo!' }}</p>
       </div>
 
       <!-- Grid de tarjetas -->
@@ -670,21 +727,70 @@ export class EventsComponent implements OnInit {
                     <p class="text-xs text-slate-500">{{ selected.created_at | date:'medium' }}</p>
                   </div>
                 </div>
-                <button (click)="closeDetail()" class="flex-shrink-0 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold transition">✕</button>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    *ngIf="selected.author?.user_id"
+                    (click)="toggleFollow()"
+                    [disabled]="followLoading"
+                    class="px-3 py-1.5 rounded-lg border text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    [ngClass]="selected.author?.is_following
+                      ? 'bg-purple-500/20 border-purple-500/60 text-purple-200 hover:bg-red-500/10 hover:border-red-500/40 hover:text-red-300'
+                      : 'bg-slate-800 border-slate-600 text-slate-300 hover:bg-purple-500/20 hover:border-purple-500/50 hover:text-purple-200'"
+                  >
+                    {{ followLoading ? '...' : (selected.author?.is_following ? 'Siguiendo ✓' : '+ Seguir') }}
+                  </button>
+                  <button (click)="closeDetail()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold transition">✕</button>
+                </div>
               </div>
               <h3 *ngIf="selected.title" class="text-xl font-bold text-slate-100">{{ selected.title }}</h3>
               <p class="text-slate-300 text-sm whitespace-pre-wrap leading-relaxed">{{ selected.content }}</p>
-              <div class="flex items-center gap-4 text-slate-500 text-sm pt-2 border-t border-slate-800">
-                <span>❤️ {{ selected.likes?.length ?? 0 }} me gusta</span>
-                <span>💬 {{ selected.comments?.length ?? 0 }} comentario{{ (selected.comments?.length ?? 0) !== 1 ? 's' : '' }}</span>
+              <div class="flex items-center gap-3 pt-2 border-t border-slate-800">
+                <button
+                  (click)="toggleLike()"
+                  [disabled]="likeLoading"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  [ngClass]="selected.is_liked
+                    ? 'bg-pink-500/20 border-pink-500/60 text-pink-300'
+                    : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:border-pink-500/40 hover:text-pink-300'"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" [attr.fill]="selected.is_liked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                  {{ selected.likes_count ?? selected.likes?.length ?? 0 }}
+                </button>
+                <span class="flex items-center gap-1.5 text-sm text-slate-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  {{ selected.comments?.length ?? 0 }} comentario{{ (selected.comments?.length ?? 0) !== 1 ? 's' : '' }}
+                </span>
               </div>
-              <div *ngIf="selected.comments?.length" class="space-y-3">
+              <div class="space-y-3">
                 <p class="text-sm font-semibold text-slate-300">Comentarios</p>
-                <div *ngFor="let comment of selected.comments.slice(0, 5)" class="bg-slate-800/50 rounded-lg p-3">
-                  <p class="text-xs font-semibold text-slate-300 mb-1">{{ comment.user?.user_name || 'Usuario' }}</p>
-                  <p class="text-xs text-slate-400">{{ comment.content }}</p>
+                <ng-container *ngIf="selected.comments?.length; else noComments">
+                  <div *ngFor="let comment of selected.comments.slice(0, 5)" class="bg-slate-800/50 rounded-lg p-3">
+                    <p class="text-xs font-semibold text-slate-300 mb-1">{{ comment.user?.user_name || 'Usuario' }}</p>
+                    <p class="text-xs text-slate-400">{{ comment.comment_text }}</p>
+                  </div>
+                  <p *ngIf="selected.comments.length > 5" class="text-xs text-slate-500">y {{ selected.comments.length - 5 }} comentarios más...</p>
+                </ng-container>
+                <ng-template #noComments>
+                  <p class="text-xs text-slate-500 italic">Sin comentarios aún. ¡Sé el primero!</p>
+                </ng-template>
+                <!-- Formulario nuevo comentario -->
+                <div class="flex gap-2 pt-1">
+                  <textarea
+                    [(ngModel)]="newComment"
+                    placeholder="Escribe un comentario..."
+                    rows="2"
+                    class="flex-1 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 text-xs placeholder-slate-500 focus:outline-none focus:border-purple-500/60 resize-none"
+                    (keydown.enter)="onCommentEnter($event)"
+                  ></textarea>
+                  <button
+                    (click)="submitComment()"
+                    [disabled]="commentLoading || !newComment.trim()"
+                    class="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 self-end"
+                  >
+                    <span *ngIf="!commentLoading">Enviar</span>
+                    <svg *ngIf="commentLoading" class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"/><path fill="currentColor" d="M4 12a8 8 0 018-8v8z" class="opacity-75"/></svg>
+                  </button>
                 </div>
-                <p *ngIf="selected.comments.length > 5" class="text-xs text-slate-500">y {{ selected.comments.length - 5 }} comentarios más...</p>
               </div>
             </div>
           </ng-container>
@@ -700,17 +806,21 @@ export class UniverseComponent implements OnInit {
   loading = true;
   total = 0;
   errorMessage = '';
-  mineOnly = false;
+  postFilter: 'all' | 'mine' | 'following' = 'all';
   selected: any = null;
   detailLoading = false;
+  likeLoading = false;
+  followLoading = false;
+  newComment = '';
+  commentLoading = false;
   posts: UniversePost[] = [];
 
   ngOnInit(): void {
     this.loadPosts();
   }
 
-  setFilter(mineOnly: boolean): void {
-    this.mineOnly = mineOnly;
+  setFilter(filter: 'all' | 'mine' | 'following'): void {
+    this.postFilter = filter;
     this.loadPosts();
   }
 
@@ -739,6 +849,10 @@ export class UniverseComponent implements OnInit {
   openDetail(id: number): void {
     this.selected = null;
     this.detailLoading = true;
+    this.likeLoading = false;
+    this.followLoading = false;
+    this.newComment = '';
+    this.commentLoading = false;
     this.http.get<any>(`${API_CONFIG.BASE_URL}/social/${id}`).subscribe({
       next: (data) => { this.selected = (data as any).data ?? data; this.detailLoading = false; },
       error: () => { this.detailLoading = false; },
@@ -748,6 +862,63 @@ export class UniverseComponent implements OnInit {
   closeDetail(): void {
     this.selected = null;
     this.detailLoading = false;
+    this.likeLoading = false;
+    this.followLoading = false;
+    this.newComment = '';
+    this.commentLoading = false;
+  }
+
+  toggleLike(): void {
+    if (!this.selected || this.likeLoading) return;
+    this.likeLoading = true;
+    this.http.post<{ liked: boolean; likes_count: number }>(
+      `${API_CONFIG.BASE_URL}/social/${this.selected.post_id}/like`, {}
+    ).subscribe({
+      next: (res) => {
+        this.selected.is_liked = res.liked;
+        this.selected.likes_count = res.likes_count;
+        this.likeLoading = false;
+      },
+      error: () => { this.likeLoading = false; },
+    });
+  }
+
+  toggleFollow(): void {
+    if (!this.selected?.author?.user_id || this.followLoading) return;
+    this.followLoading = true;
+    this.http.post<{ following: boolean; followers_count: number }>(
+      `${API_CONFIG.BASE_URL}/users/${this.selected.author.user_id}/follow`, {}
+    ).subscribe({
+      next: (res) => {
+        this.selected.author.is_following = res.following;
+        this.followLoading = false;
+      },
+      error: () => { this.followLoading = false; },
+    });
+  }
+
+  submitComment(): void {
+    if (!this.selected || !this.newComment.trim() || this.commentLoading) return;
+    this.commentLoading = true;
+    this.http.post<{ comment: any; comments_count: number }>(
+      `${API_CONFIG.BASE_URL}/social/${this.selected.post_id}/comment`,
+      { comment_text: this.newComment.trim() }
+    ).subscribe({
+      next: (res) => {
+        if (!this.selected.comments) this.selected.comments = [];
+        this.selected.comments.push(res.comment);
+        this.newComment = '';
+        this.commentLoading = false;
+      },
+      error: () => { this.commentLoading = false; },
+    });
+  }
+
+  onCommentEnter(event: Event): void {
+    if (!(event as KeyboardEvent).shiftKey) {
+      event.preventDefault();
+      this.submitComment();
+    }
   }
 
   private loadPosts(): void {
@@ -755,8 +926,10 @@ export class UniverseComponent implements OnInit {
     this.errorMessage = '';
 
     let params = new HttpParams();
-    if (this.mineOnly) {
+    if (this.postFilter === 'mine') {
       params = params.set('mine', '1');
+    } else if (this.postFilter === 'following') {
+      params = params.set('following', '1');
     }
 
     this.http.get<PaginatedResponse<UniversePost>>(`${API_CONFIG.BASE_URL}/social`, { params }).subscribe({

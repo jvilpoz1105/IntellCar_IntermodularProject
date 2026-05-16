@@ -75,6 +75,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/market/{id}', [MarketControl::class, 'update']);
     Route::patch('/market/{id}', [MarketControl::class, 'update']);
     
+    Route::post('/social/{id}/like', [UnivControl::class, 'toggleLike']);
+    Route::post('/social/{id}/comment', [UnivControl::class, 'storeComment']);
+    Route::post('/users/{id}/follow', [AppUserController::class, 'toggleFollow']);
+
     Route::put('/social/{id}', [UnivControl::class, 'update']);
     Route::patch('/social/{id}', [UnivControl::class, 'update']);
     

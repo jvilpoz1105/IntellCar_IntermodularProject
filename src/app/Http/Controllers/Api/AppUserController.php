@@ -37,6 +37,32 @@ class AppUserController extends Controller
     }
 
     /**
+     * Toggle follow/unfollow de un usuario (requiere autenticación).
+     */
+    public function toggleFollow(Request $request, string $id)
+    {
+        $targetUser = AppUser::findOrFail($id);
+        $currentUser = $request->user();
+
+        if ($currentUser->user_id === (int) $id) {
+            return response()->json(['message' => 'No puedes seguirte a ti mismo'], 422);
+        }
+
+        if ($currentUser->following()->where('followed_id', $id)->exists()) {
+            $currentUser->following()->detach($id);
+            $following = false;
+        } else {
+            $currentUser->following()->attach($id);
+            $following = true;
+        }
+
+        return response()->json([
+            'following' => $following,
+            'followers_count' => $targetUser->followers()->count(),
+        ]);
+    }
+
+    /**
      * Update the specified resource.
      */
     public function update(Request $request, string $id)
