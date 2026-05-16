@@ -21,15 +21,26 @@ class FactoryDataSeeder extends Seeder
         // Generar 20 usuarios extra
         AppUser::factory(20)->create();
 
+        $users = AppUser::all();
+
         // Generar 50 anuncios de coches
         CarAdvert::factory(50)->create();
 
         // Generar 40 posts sociales
-        Post::factory(40)->create()->each(function ($post) {
+        Post::factory(40)->create()->each(function ($post) use ($users) {
             // Cada post tiene entre 1 y 5 comentarios
             PostComment::factory(rand(1, 5))->create(['post_id' => $post->post_id]);
-            // Cada post tiene entre 5 y 15 likes
-            PostLike::factory(rand(5, 15))->create(['post_id' => $post->post_id]);
+            
+            // Cada post tiene entre 5 y 15 likes de usuarios únicos
+            $likeCount = rand(5, min(15, $users->count()));
+            $likers = $users->random($likeCount);
+            foreach ($likers as $user) {
+                PostLike::create([
+                    'user_id' => $user->user_id,
+                    'post_id' => $post->post_id,
+                    'created_at' => fake()->dateTimeBetween('-4 months', 'now'),
+                ]);
+            }
         });
 
         // Generar 10 eventos KDD
