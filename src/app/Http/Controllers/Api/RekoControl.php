@@ -26,38 +26,33 @@ class RekoControl extends Controller
         // Si ambos ya están inicializados, no hacemos nada
         if ($this->s3Client && $this->rekognitionClient) return;
 
-        $key = config('services.aws.key');
-        $secret = config('services.aws.secret');
-        $token = config('services.aws.token');
-        $region = config('services.aws.region', 'us-east-1');
         $this->bucket = config('services.aws.bucket', 'intellcar-media-tfg-jose');
 
-        if (!$key || !$secret) {
-            throw new \Exception("Faltan las credenciales de AWS. (Key: " . ($key ? 'OK' : 'MISSING') . ", Secret: " . ($secret ? 'OK' : 'MISSING') . ")");
-        }
-
-        $credentials = [
-            'key'    => $key,
-            'secret' => $secret,
+        $options = [
+            'version' => 'latest',
+            'region' => config('services.aws.region', 'us-east-1'),
         ];
 
-        if ($token) {
-            $credentials['token'] = $token;
+        // Solo usar credenciales explícitas si existen (ej. en desarrollo local).
+        // En EC2 (Learner Lab), el SDK usará automáticamente el IAM Role (LabRole).
+        $key = config('services.aws.key');
+        $secret = config('services.aws.secret');
+        
+        if ($key && $secret) {
+            $options['credentials'] = [
+                'key'    => $key,
+                'secret' => $secret,
+            ];
+            if ($token = config('services.aws.token')) {
+                $options['credentials']['token'] = $token;
+            }
         }
 
         // Inicializamos S3
-        $this->s3Client = new S3Client([
-            'version' => 'latest',
-            'region' => $region,
-            'credentials' => $credentials,
-        ]);
+        $this->s3Client = new S3Client($options);
 
         // Inicializamos Rekognition
-        $this->rekognitionClient = new RekognitionClient([
-            'version' => 'latest',
-            'region' => $region,
-            'credentials' => $credentials,
-        ]);
+        $this->rekognitionClient = new RekognitionClient($options);
     }
 
     public function presigned(Request $request): JsonResponse

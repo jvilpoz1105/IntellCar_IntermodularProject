@@ -15,29 +15,27 @@ class ComprehendControl extends Controller
     {
         if ($this->comprehendClient) return;
 
-        $key = config('services.aws.key');
-        $secret = config('services.aws.secret');
-        $token = config('services.aws.token');
-        $region = config('services.aws.region', 'us-east-1');
-
-        if (!$key || !$secret) {
-            throw new \Exception("Faltan las credenciales de AWS. (Key: " . ($key ? 'OK' : 'MISSING') . ", Secret: " . ($secret ? 'OK' : 'MISSING') . ")");
-        }
-
-        $credentials = [
-            'key'    => $key,
-            'secret' => $secret,
+        $options = [
+            'version' => 'latest',
+            'region' => config('services.aws.region', 'us-east-1'),
         ];
 
-        if ($token) {
-            $credentials['token'] = $token;
+        // Solo usar credenciales explícitas si existen (ej. en desarrollo local).
+        // En EC2 (Learner Lab), el SDK usará automáticamente el IAM Role (LabRole).
+        $key = config('services.aws.key');
+        $secret = config('services.aws.secret');
+        
+        if ($key && $secret) {
+            $options['credentials'] = [
+                'key'    => $key,
+                'secret' => $secret,
+            ];
+            if ($token = config('services.aws.token')) {
+                $options['credentials']['token'] = $token;
+            }
         }
 
-        $this->comprehendClient = new ComprehendClient([
-            'version' => 'latest',
-            'region' => $region,
-            'credentials' => $credentials,
-        ]);
+        $this->comprehendClient = new ComprehendClient($options);
     }
 
     public function analyzeText(Request $request): JsonResponse
