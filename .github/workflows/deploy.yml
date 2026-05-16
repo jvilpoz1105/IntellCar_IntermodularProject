@@ -46,6 +46,9 @@ jobs:
         working-directory: ./front
         run: pnpm run build
 
+      - name: Verificar archivos generados (Debug)
+        run: ls -R ./front/apps/browser-client/dist/
+
       - name: Configurar credenciales AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -196,6 +199,11 @@ jobs:
             # Bajamos los archivos del S3 a la carpeta de Nginx
             # Usamos las credenciales que ya tiene el servidor o el IAM Profile
             sudo aws s3 sync s3://${{ env.S3_BUCKET_FRONTEND }} /var/www/html/ --delete
+            
+            # Verificar qué archivos hay ahora en el servidor (Debug)
+            echo "Archivos en /var/www/html:"
+            ls -R /var/www/html
+            
             sudo chown -R www-data:www-data /var/www/html
             sudo chmod -R 755 /var/www/html
 
