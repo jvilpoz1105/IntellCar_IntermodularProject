@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ComprehendService } from '../comprehend.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 export type SmartFieldStatus = 'idle' | 'thinking' | 'success' | 'warning' | 'error';
 
@@ -54,15 +55,15 @@ export type SmartFieldStatus = 'idle' | 'thinking' | 'success' | 'warning' | 'er
         }
       </div>
 
-      <!-- Feedback Messages -->
+      <!-- Feedback Messages (Concise inline alerts to prevent layout overlapping) -->
       <div class="h-4">
         @if (status === 'error' && errorMessage) {
           <span class="text-[11px] font-medium text-red-500 animate-in fade-in slide-in-from-top-1">
-            {{ errorMessage }}
+            🚨 Contenido no permitido
           </span>
         } @else if (status === 'warning' && warningMessage) {
           <span class="text-[11px] font-medium text-amber-500 animate-in fade-in slide-in-from-top-1">
-            {{ warningMessage }}
+            ⚠️ Advertencia de contenido (ver aviso)
           </span>
         } @else if (status === 'success' && successMessage) {
           <span class="text-[11px] font-medium text-emerald-500 animate-in fade-in slide-in-from-top-1 flex items-center gap-1">
@@ -94,6 +95,7 @@ export class SmartFieldComponent implements OnInit {
   @Output() nlpStatus = new EventEmitter<'valid' | 'invalid'>();
 
   private comprehendService = inject(ComprehendService);
+  private toastService = inject(ToastService);
 
   containerClasses = computed(() => {
     switch (this.status) {
@@ -127,6 +129,8 @@ export class SmartFieldComponent implements OnInit {
               this.status = res.status;
               if (res.status === 'warning') {
                 this.warningMessage = res.warning || '';
+                // Mostrar notificación tipo Toast con la advertencia completa
+                this.toastService.showWarning(res.warning || 'Advertencia de moderación en el texto.');
                 this.nlpStatus.emit('valid'); // warnings don't block
               } else if (res.status === 'success') {
                 this.successMessage = 'Texto válido';
@@ -135,7 +139,10 @@ export class SmartFieldComponent implements OnInit {
             },
             error: (err) => {
               this.status = 'error';
-              this.errorMessage = err.error?.error || 'Error analizando texto';
+              const errMsg = err.error?.error || err.error?.mensaje_ia || 'Contenido rechazado por la moderación.';
+              this.errorMessage = errMsg;
+              // Mostrar notificación tipo Toast roja con el error de moderación completo
+              this.toastService.showError(errMsg);
               this.nlpStatus.emit('invalid');
             }
           });

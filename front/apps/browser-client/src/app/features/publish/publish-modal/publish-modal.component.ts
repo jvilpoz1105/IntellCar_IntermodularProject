@@ -12,6 +12,7 @@ import { FilePickerComponent } from '../file-picker/file-picker.component';
 import { SmartFieldComponent } from '../smart-field/smart-field.component';
 import { environment } from '../../../../environments/environment';
 import { VehiclePaddock } from '../publish.types';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-publish-modal',
@@ -306,6 +307,7 @@ export class PublishModalComponent implements OnInit {
   private http    = inject(HttpClient);
   readonly publishService = inject(PublishService);
   readonly catalog        = inject(CatalogService);
+  private toastService    = inject(ToastService);
 
   private readonly API_BASE = environment.apiUrl;
 
@@ -439,6 +441,7 @@ export class PublishModalComponent implements OnInit {
 
         const result = await this.http.post(`${this.API_BASE}/market`, payload).toPromise();
         this.submitSuccess.set(true);
+        this.toastService.showSuccess('¡Tu anuncio se ha publicado con éxito!');
         this.published.emit(result);
 
         // Cerrar el modal tras 1.5s de confirmación
@@ -448,6 +451,7 @@ export class PublishModalComponent implements OnInit {
         const payload = { content: this.form.value.content };
         const result = await this.http.post(`${this.API_BASE}/social`, payload).toPromise();
         this.submitSuccess.set(true);
+        this.toastService.showSuccess('¡Tu post se ha publicado con éxito!');
         this.published.emit(result);
         setTimeout(() => this.handleClose(), 1500);
       }
@@ -456,6 +460,7 @@ export class PublishModalComponent implements OnInit {
         ? Object.values(err.error.errors).flat().join(', ')
         : 'Error al publicar. Inténtalo de nuevo.';
       this.submitError.set(msg as string);
+      this.toastService.showError(msg as string);
     } finally {
       this.isSubmitting.set(false);
     }
