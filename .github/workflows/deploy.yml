@@ -191,7 +191,7 @@ jobs:
                     proxy_cache_bypass $http_upgrade;
                 }
             }
-            ENVEOF
+            EOF
             sudo ln -sf /etc/nginx/sites-available/intellcar /etc/nginx/sites-enabled/
             sudo rm -f /etc/nginx/sites-enabled/default
             # Limpiar puertos bloqueados antes de arrancar Nginx
