@@ -156,7 +156,10 @@ jobs:
             docker exec intellcar_api chmod -R 775 storage bootstrap/cache
 
             # ── 7. Ejecutar migraciones con SEED y cachear configuración ──
-            docker exec intellcar_api php artisan migrate:fresh --seed --force
+            echo "Ejecutando migraciones y seeders..."
+            docker exec intellcar_api php artisan migrate:fresh --seed --force > seed_output.log 2>&1 || (cat seed_output.log && exit 1)
+            cat seed_output.log
+            
             docker exec intellcar_api php artisan config:cache
             docker exec intellcar_api php artisan route:cache
             docker exec intellcar_api php artisan view:cache
