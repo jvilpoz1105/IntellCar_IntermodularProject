@@ -65,6 +65,7 @@ jobs:
   # ─────────────────────────────────────────────────────
   deploy-api:
     name: 🔧 Deploy API (EC2 + Docker)
+    needs: deploy-frontend
     runs-on: ubuntu-latest
 
     steps:
