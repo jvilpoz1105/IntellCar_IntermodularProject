@@ -20,11 +20,12 @@ class EngineSpecFactory extends Factory
             ['key' => 'Consumo Medio', 'unit' => 'l/100km'],
         ];
 
-        $spec = $this->faker->randomElement($specs);
+        $faker = \Faker\Factory::create();
+        $spec = $faker->randomElement($specs);
 
         return [
             'sp_key' => $spec['key'],
-            'sp_value' => (string)$this->faker->randomFloat(1, 1, 3000),
+            'sp_value' => (string)$faker->randomFloat(1, 1, 3000),
             'measurement_unit' => $spec['unit'],
             'variable_type' => 'numeric',
             'sp_engine' => CarEngine::query()->inRandomOrder()->value('engine_id') ?? CarEngine::factory(),

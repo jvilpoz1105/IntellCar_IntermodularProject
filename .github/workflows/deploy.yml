@@ -160,7 +160,7 @@ jobs:
             docker exec intellcar_api php artisan migrate:fresh --seed --force > seed_output.log 2>&1 || (cat seed_output.log && exit 1)
             cat seed_output.log
             
-            docker exec intellcar_api php artisan config:cache
+            docker exec intellcar_api php artisan config:cache || echo "Advertencia: No se pudo cachear la configuración (Swagger), continuando..."
             docker exec intellcar_api php artisan route:cache
             docker exec intellcar_api php artisan view:cache
 
