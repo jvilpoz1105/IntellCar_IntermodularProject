@@ -91,6 +91,8 @@ import { VehiclePaddock } from '../publish.types';
                   label="Título del anuncio *"
                   placeholder="Ej: BMW M3 Competition 2023"
                   [control]="getControl('ad_title')"
+                  [enableNlp]="true"
+                  (nlpStatus)="handleNlpStatus('ad_title', $event)"
                 />
                 <app-smart-field
                   id="field-price"
@@ -177,12 +179,16 @@ import { VehiclePaddock } from '../publish.types';
                     label="Región / Provincia"
                     placeholder="Ej: Cataluña"
                     [control]="getControl('region')"
+                    [enableNlp]="true"
+                    (nlpStatus)="handleNlpStatus('region', $event)"
                   />
                   <app-smart-field
                     id="field-city"
                     label="Ciudad"
                     placeholder="Ej: Barcelona"
                     [control]="getControl('city')"
+                    [enableNlp]="true"
+                    (nlpStatus)="handleNlpStatus('city', $event)"
                   />
                 </div>
               </div>
@@ -193,6 +199,8 @@ import { VehiclePaddock } from '../publish.types';
                 label="Detalles adicionales"
                 placeholder="Estado del motor, equipamiento, historial..."
                 [control]="getControl('ad_details')"
+                [enableNlp]="true"
+                (nlpStatus)="handleNlpStatus('ad_details', $event)"
               />
 
               <!-- Paddocks / Comunidades -->
@@ -226,6 +234,8 @@ import { VehiclePaddock } from '../publish.types';
                 label="¿En qué estás pensando?"
                 placeholder="Cuéntale algo a la comunidad..."
                 [control]="getControl('content')"
+                [enableNlp]="true"
+                (nlpStatus)="handleNlpStatus('content', $event)"
               />
             }
 
@@ -236,6 +246,8 @@ import { VehiclePaddock } from '../publish.types';
               <div class="text-[11px] text-slate-500 flex-1">
                 @if (publishService.hasRejectedMedia()) {
                   <span class="text-red-400">⚠ Elimina las fotos rechazadas antes de continuar</span>
+                } @else if (hasNlpError()) {
+                  <span class="text-red-400">⚠ Corrige los errores de contenido detectados por IA</span>
                 } @else if (form.invalid) {
                   <span>Completa los campos obligatorios (*)</span>
                 } @else if (!publishService.hasValidMedia()) {
@@ -297,10 +309,11 @@ export class PublishModalComponent implements OnInit {
 
   private readonly API_BASE = environment.apiUrl;
 
-  // Estado del submit
   isSubmitting  = signal(false);
   submitSuccess = signal(false);
   submitError   = signal<string | null>(null);
+  
+  nlpErrors     = signal<Record<string, boolean>>({});
 
   // Paddocks seleccionados
   selectedPaddockIds = signal<number[]>([]);
@@ -368,15 +381,22 @@ export class PublishModalComponent implements OnInit {
     return this.form.get(name)!;
   }
 
+  handleNlpStatus(field: string, status: 'valid' | 'invalid'): void {
+    this.nlpErrors.update(v => ({ ...v, [field]: status === 'invalid' }));
+  }
+
+  hasNlpError = computed(() => Object.values(this.nlpErrors()).some(invalid => invalid));
+
   get canSubmit(): boolean {
     if (this.type === 'market') {
       return this.form.valid
         && !this.publishService.isUploading()
         && !this.publishService.hasRejectedMedia()
         && this.publishService.hasValidMedia()
-        && !this.isSubmitting();
+        && !this.isSubmitting()
+        && !this.hasNlpError();
     }
-    return this.form.valid && !this.isSubmitting();
+    return this.form.valid && !this.isSubmitting() && !this.hasNlpError();
   }
 
   togglePaddock(paddock: VehiclePaddock): void {
@@ -447,6 +467,7 @@ export class PublishModalComponent implements OnInit {
     this.selectedPaddockIds.set([]);
     this.submitSuccess.set(false);
     this.submitError.set(null);
+    this.nlpErrors.set({});
     this.close.emit();
   }
 }

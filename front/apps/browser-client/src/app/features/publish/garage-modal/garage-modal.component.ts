@@ -1,6 +1,6 @@
 import {
   Component, Output, EventEmitter,
-  inject, signal, OnInit
+  inject, signal, computed, OnInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
@@ -66,6 +66,8 @@ import { environment } from '../../../../environments/environment';
               label="Nombre o apodo del coche"
               placeholder="Ej: Mi M3, La bestia, Pitufina..."
               [control]="getControl('car_nickname')"
+              [enableNlp]="true"
+              (nlpStatus)="handleNlpStatus('car_nickname', $event)"
             />
 
             <!-- Vehículo: Marca → Modelo → Motor -->
@@ -105,6 +107,8 @@ import { environment } from '../../../../environments/environment';
               label="Descripción / Historia"
               placeholder="Cuéntanos algo de este coche, modificaciones, historia..."
               [control]="getControl('description')"
+              [enableNlp]="true"
+              (nlpStatus)="handleNlpStatus('description', $event)"
             />
 
             <!-- ¿Coche actual? -->
@@ -132,6 +136,7 @@ import { environment } from '../../../../environments/environment';
             <div class="flex items-center justify-between gap-3 mt-auto pt-5 border-t border-slate-800">
               <div class="text-[11px] text-slate-500 flex-1">
                 @if (publishService.hasRejectedMedia()) { <span class="text-red-400">⚠ Elimina la foto rechazada</span> }
+                @else if (hasNlpError()) { <span class="text-red-400">⚠ Corrige los errores de contenido detectados por IA</span> }
                 @else if (form.invalid) { <span>Selecciona al menos un modelo (*)</span> }
                 @else if (submitSuccess()) { <span class="text-emerald-400">✓ ¡Coche añadido al garaje!</span> }
                 @else if (submitError()) { <span class="text-red-400">{{ submitError() }}</span> }
@@ -171,6 +176,8 @@ export class GarageModalComponent implements OnInit {
   submitSuccess = signal(false);
   submitError   = signal<string | null>(null);
   isCurrentCar  = signal(false);
+  
+  nlpErrors     = signal<Record<string, boolean>>({});
 
   form: FormGroup = this.fb.group({
     car_nickname: [''],
@@ -197,11 +204,18 @@ export class GarageModalComponent implements OnInit {
     this.form.patchValue({ is_current_car: next });
   }
 
+  handleNlpStatus(field: string, status: 'valid' | 'invalid'): void {
+    this.nlpErrors.update(v => ({ ...v, [field]: status === 'invalid' }));
+  }
+
+  hasNlpError = computed(() => Object.values(this.nlpErrors()).some(invalid => invalid));
+
   get canSubmit(): boolean {
     return this.form.valid
       && !this.publishService.isUploading()
       && !this.publishService.hasRejectedMedia()
-      && !this.isSubmitting();
+      && !this.isSubmitting()
+      && !this.hasNlpError();
   }
 
   async onSubmit(): Promise<void> {
@@ -240,6 +254,7 @@ export class GarageModalComponent implements OnInit {
     this.isCurrentCar.set(false);
     this.submitSuccess.set(false);
     this.submitError.set(null);
+    this.nlpErrors.set({});
     this.close.emit();
   }
 }

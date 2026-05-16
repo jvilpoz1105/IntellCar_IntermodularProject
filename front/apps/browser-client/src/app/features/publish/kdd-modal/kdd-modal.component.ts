@@ -1,6 +1,6 @@
 import {
   Component, Output, EventEmitter,
-  inject, signal, OnInit
+  inject, signal, computed, OnInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
@@ -62,10 +62,10 @@ import { VehiclePaddock } from '../publish.types';
           <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5 flex-1">
 
             <!-- Título -->
-            <app-smart-field id="kdd-field-title" label="Título del evento *" placeholder="Ej: Track Day Circuit de Catalunya" [control]="getControl('title')" />
+            <app-smart-field id="kdd-field-title" label="Título del evento *" placeholder="Ej: Track Day Circuit de Catalunya" [control]="getControl('title')" [enableNlp]="true" (nlpStatus)="handleNlpStatus('title', $event)" />
 
             <!-- Descripción -->
-            <app-smart-field id="kdd-field-description" label="Descripción *" placeholder="Cuéntanos de qué va el evento..." [control]="getControl('event_description')" />
+            <app-smart-field id="kdd-field-description" label="Descripción *" placeholder="Cuéntanos de qué va el evento..." [control]="getControl('event_description')" [enableNlp]="true" (nlpStatus)="handleNlpStatus('event_description', $event)" />
 
             <!-- Fecha + Participantes -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -77,9 +77,9 @@ import { VehiclePaddock } from '../publish.types';
             <div>
               <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Ubicación</p>
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <app-smart-field id="kdd-field-location" label="Nombre del lugar" placeholder="Ej: Circuito de Jerez" [control]="getControl('location_name')" />
-                <app-smart-field id="kdd-field-address" label="Dirección" placeholder="Calle, número..." [control]="getControl('address')" />
-                <app-smart-field id="kdd-field-city" label="Ciudad" placeholder="Ej: Jerez de la Frontera" [control]="getControl('city')" />
+                <app-smart-field id="kdd-field-location" label="Nombre del lugar" placeholder="Ej: Circuito de Jerez" [control]="getControl('location_name')" [enableNlp]="true" (nlpStatus)="handleNlpStatus('location_name', $event)" />
+                <app-smart-field id="kdd-field-address" label="Dirección" placeholder="Calle, número..." [control]="getControl('address')" [enableNlp]="true" (nlpStatus)="handleNlpStatus('address', $event)" />
+                <app-smart-field id="kdd-field-city" label="Ciudad" placeholder="Ej: Jerez de la Frontera" [control]="getControl('city')" [enableNlp]="true" (nlpStatus)="handleNlpStatus('city', $event)" />
               </div>
             </div>
 
@@ -122,6 +122,7 @@ import { VehiclePaddock } from '../publish.types';
             <div class="flex items-center justify-between gap-3 mt-auto pt-5 border-t border-slate-800">
               <div class="text-[11px] text-slate-500 flex-1">
                 @if (publishService.hasRejectedMedia()) { <span class="text-red-400">⚠ Elimina las fotos rechazadas</span> }
+                @else if (hasNlpError()) { <span class="text-red-400">⚠ Corrige los errores de contenido detectados por IA</span> }
                 @else if (form.invalid) { <span>Completa los campos obligatorios (*)</span> }
                 @else if (submitSuccess()) { <span class="text-emerald-400">✓ ¡Evento creado!</span> }
                 @else if (submitError()) { <span class="text-red-400">{{ submitError() }}</span> }
@@ -161,6 +162,8 @@ export class KddModalComponent implements OnInit {
   submitSuccess    = signal(false);
   submitError      = signal<string | null>(null);
   selectedPaddockId = signal<number | null>(null);
+  
+  nlpErrors        = signal<Record<string, boolean>>({});
 
   form: FormGroup = this.fb.group({
     title:             ['', [Validators.required, Validators.maxLength(150)]],
@@ -188,11 +191,18 @@ export class KddModalComponent implements OnInit {
     this.form.get('paddock_id')!.markAsTouched();
   }
 
+  handleNlpStatus(field: string, status: 'valid' | 'invalid'): void {
+    this.nlpErrors.update(v => ({ ...v, [field]: status === 'invalid' }));
+  }
+
+  hasNlpError = computed(() => Object.values(this.nlpErrors()).some(invalid => invalid));
+
   get canSubmit(): boolean {
     return this.form.valid
       && !this.publishService.isUploading()
       && !this.publishService.hasRejectedMedia()
-      && !this.isSubmitting();
+      && !this.isSubmitting()
+      && !this.hasNlpError();
   }
 
   async onSubmit(): Promise<void> {
@@ -233,6 +243,7 @@ export class KddModalComponent implements OnInit {
     this.selectedPaddockId.set(null);
     this.submitSuccess.set(false);
     this.submitError.set(null);
+    this.nlpErrors.set({});
     this.close.emit();
   }
 }

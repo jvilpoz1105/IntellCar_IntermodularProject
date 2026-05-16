@@ -1,6 +1,6 @@
 import {
   Component, Output, EventEmitter,
-  inject, signal, OnInit
+  inject, signal, computed, OnInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
@@ -59,8 +59,8 @@ import { environment } from '../../../../environments/environment';
           </div>
 
           <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5 flex-1">
-            <app-smart-field id="social-field-title" label="Título (opcional)" placeholder="Ej: Mi primer day en circuito..." [control]="getControl('title')" />
-            <app-smart-field id="social-field-content" label="¿Qué quieres compartir? *" placeholder="Cuéntale algo a la comunidad..." [control]="getControl('content')" />
+            <app-smart-field id="social-field-title" label="Título (opcional)" placeholder="Ej: Mi primer day en circuito..." [control]="getControl('title')" [enableNlp]="true" (nlpStatus)="handleNlpStatus('title', $event)" />
+            <app-smart-field id="social-field-content" label="¿Qué quieres compartir? *" placeholder="Cuéntale algo a la comunidad..." [control]="getControl('content')" [enableNlp]="true" (nlpStatus)="handleNlpStatus('content', $event)" />
 
             <div>
               <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Vehículo relacionado (opcional)</p>
@@ -75,6 +75,7 @@ import { environment } from '../../../../environments/environment';
             <div class="flex items-center justify-between gap-3 mt-auto pt-5 border-t border-slate-800">
               <div class="text-[11px] text-slate-500 flex-1">
                 @if (publishService.hasRejectedMedia()) { <span class="text-red-400">⚠ Elimina las fotos rechazadas</span> }
+                @else if (hasNlpError()) { <span class="text-red-400">⚠ Corrige los errores de contenido detectados por IA</span> }
                 @else if (form.invalid) { <span>El contenido del post es obligatorio</span> }
                 @else if (submitSuccess()) { <span class="text-emerald-400">✓ ¡Post publicado!</span> }
                 @else if (submitError()) { <span class="text-red-400">{{ submitError() }}</span> }
@@ -113,6 +114,8 @@ export class SocialModalComponent implements OnInit {
   isSubmitting  = signal(false);
   submitSuccess = signal(false);
   submitError   = signal<string | null>(null);
+  
+  nlpErrors     = signal<Record<string, boolean>>({});
 
   form: FormGroup = this.fb.group({
     title:      [''],
@@ -132,8 +135,14 @@ export class SocialModalComponent implements OnInit {
 
   getControl(name: string): AbstractControl { return this.form.get(name)!; }
 
+  handleNlpStatus(field: string, status: 'valid' | 'invalid'): void {
+    this.nlpErrors.update(v => ({ ...v, [field]: status === 'invalid' }));
+  }
+
+  hasNlpError = computed(() => Object.values(this.nlpErrors()).some(invalid => invalid));
+
   get canSubmit(): boolean {
-    return this.form.valid && !this.publishService.isUploading() && !this.publishService.hasRejectedMedia() && !this.isSubmitting();
+    return this.form.valid && !this.publishService.isUploading() && !this.publishService.hasRejectedMedia() && !this.isSubmitting() && !this.hasNlpError();
   }
 
   async onSubmit(): Promise<void> {
@@ -164,6 +173,7 @@ export class SocialModalComponent implements OnInit {
     this.catalog.reset();
     this.submitSuccess.set(false);
     this.submitError.set(null);
+    this.nlpErrors.set({});
     this.close.emit();
   }
 }

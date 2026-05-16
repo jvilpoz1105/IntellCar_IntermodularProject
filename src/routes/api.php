@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\UnivControl;
 use App\Http\Controllers\Api\KddControl;
 use App\Http\Controllers\Api\ProfileControl;
 use App\Http\Controllers\Api\RekoControl;
+use App\Http\Controllers\Api\ComprehendControl;
 use App\Http\Controllers\Api\MakeController;
 use App\Http\Controllers\Api\PaddockController;
 use Illuminate\Http\Request;
@@ -44,12 +45,14 @@ Route::get('/social/{id}', [UnivControl::class, 'show']);
 Route::get('/kdds', [KddControl::class, 'index']);
 Route::get('/kdds/{id}', [KddControl::class, 'show']);
 
-// Media - Presigned URL (público para obtener URL de subida)
-Route::post('/media/presigned', [RekoControl::class, 'presigned']);
 
 // Internal - Endpoint para Lambda
 Route::patch('/internal/media-verify', [RekoControl::class, 'internalVerify']);
 
+// --- MEDIA & TEXT AI ANALYSIS (Temporalmente públicos para pruebas) ---
+Route::post('/media/presigned', [RekoControl::class, 'presigned']);
+Route::post('/media/analyze', [RekoControl::class, 'analyze']);
+Route::post('/text/analyze', [ComprehendControl::class, 'analyzeText']);
 
 // --- RUTAS PROTEGIDAS (Requieren Token) ---
 Route::middleware('auth:sanctum')->group(function () {
@@ -112,7 +115,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/market/{id}', [MarketControl::class, 'destroy'])->middleware('role:admin');
     Route::delete('/social/{id}', [UnivControl::class, 'destroy'])->middleware('role:admin');
     Route::delete('/kdds/{id}', [KddControl::class, 'destroy'])->middleware('role:admin');
-});
 
-// --- MEDIA AI ANALYSIS (Rekognition) - Público para pruebas ---
-Route::post('/media/analyze', [RekoControl::class, 'analyze']);
+    // --- MEDIA & TEXT AI ANALYSIS (Protegidos) ---
+    // // Route::post('/media/presigned', [RekoControl::class, 'presigned']);
+    // // Route::post('/media/analyze', [RekoControl::class, 'analyze']);
+    // // Route::post('/text/analyze', [ComprehendControl::class, 'analyzeText']);
+});
