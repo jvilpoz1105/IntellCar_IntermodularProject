@@ -183,7 +183,7 @@ jobs:
             EOF
             sudo ln -sf /etc/nginx/sites-available/intellcar /etc/nginx/sites-enabled/
             sudo rm -f /etc/nginx/sites-enabled/default
-            sudo nginx -t && sudo systemctl reload nginx
+            sudo nginx -t && sudo systemctl restart nginx
 
             # ── 7. Configuración SSL (Certbot) ──
             # Intentamos generar el certificado. Si falla (por DNS), no bloqueamos el deploy.
