@@ -3,7 +3,7 @@ import {
   inject, signal, computed, OnInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, FormControl } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { PublishService } from '../publish.service';
 import { CatalogService } from '../catalog.service';
@@ -133,7 +133,7 @@ export class SocialModalComponent implements OnInit {
     });
   }
 
-  getControl(name: string): AbstractControl { return this.form.get(name)!; }
+  getControl(name: string): FormControl { return this.form.get(name) as FormControl; }
 
   handleNlpStatus(field: string, status: 'valid' | 'invalid'): void {
     this.nlpErrors.update(v => ({ ...v, [field]: status === 'invalid' }));
