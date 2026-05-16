@@ -132,15 +132,19 @@ jobs:
 
             CACHE_STORE=database
 
-            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_SESSION_TOKEN=${{ secrets.AWS_SESSION_TOKEN }}
-            AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION || 'us-east-1' }}
-            AWS_BUCKET=intellcar-media-tfg-jose
+            AWS_ACCESS_KEY_ID='${{ secrets.AWS_ACCESS_KEY_ID }}'
+            AWS_SECRET_ACCESS_KEY='${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+            AWS_SESSION_TOKEN='${{ secrets.AWS_SESSION_TOKEN }}'
+            AWS_DEFAULT_REGION='${{ secrets.AWS_DEFAULT_REGION || 'us-east-1' }}'
+            AWS_BUCKET='intellcar-media-tfg-jose'
             AWS_USE_PATH_STYLE_ENDPOINT=false
 
             VITE_APP_NAME="IntellCar"
             ENVEOF
+
+            # ── Sincronizar hora para evitar errores de firma de AWS ──
+            sudo apt-get update && sudo apt-get install -y ntpdate
+            sudo ntpdate -s ntp.ubuntu.com
 
             # ── 4. Reconstruir SOLO el contenedor de Laravel (sin BD local) ──
             docker-compose -f docker-compose.prod.yml up -d --build
@@ -187,7 +191,7 @@ jobs:
                     proxy_cache_bypass $http_upgrade;
                 }
             }
-            EOF
+            ENVEOF
             sudo ln -sf /etc/nginx/sites-available/intellcar /etc/nginx/sites-enabled/
             sudo rm -f /etc/nginx/sites-enabled/default
             # Limpiar puertos bloqueados antes de arrancar Nginx
