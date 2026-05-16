@@ -32,7 +32,7 @@ class AppUserController extends Controller
      */
     public function show(string $id)
     {
-        $user = AppUser::with(['paddock', 'garage', 'posts'])->findOrFail($id);
+        $user = AppUser::with(['paddock', 'garage', 'posts', 'adverts'])->findOrFail($id);
         return response()->json($user);
     }
 

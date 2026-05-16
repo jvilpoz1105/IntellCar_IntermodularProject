@@ -25,8 +25,8 @@ class CarAdvertSeeder extends Seeder
                 'region' => 'Madrid',
                 'city' => 'Madrid',
                 'visible' => true,
-                'model_id' => 1,
-                'engine_id' => 1,
+                'model_id' => \App\Models\CarModel::first()?->model_id ?? 1,
+                'engine_id' => \App\Models\CarEngine::first()?->engine_id ?? 1,
                 'seller_id' => 2,
             ],
             [
@@ -85,8 +85,8 @@ class CarAdvertSeeder extends Seeder
                 'region' => 'Madrid',
                 'city' => 'Madrid',
                 'visible' => true,
-                'model_id' => 20,
-                'engine_id' => 20,
+                'model_id' => \App\Models\CarModel::orderBy('model_id', 'desc')->first()?->model_id ?? 1,
+                'engine_id' => \App\Models\CarEngine::orderBy('engine_id', 'desc')->first()?->engine_id ?? 1,
                 'seller_id' => 2,
             ],
             [
