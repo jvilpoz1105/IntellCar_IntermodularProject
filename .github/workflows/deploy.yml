@@ -158,6 +158,33 @@ jobs:
             docker exec intellcar_api php artisan route:cache
             docker exec intellcar_api php artisan view:cache
 
+            # ── 6.5. Configurar Nginx (Base para que Certbot funcione) ──
+            sudo tee /etc/nginx/sites-available/intellcar <<EOF
+              server {
+                  listen 80;
+                  server_name ${{ secrets.DOMAIN_NAME }};
+                  root /var/www/html;
+                  index index.html;
+
+                  location / {
+                      try_files \$uri \$uri/ /index.html;
+                  }
+
+                  # Proxy para la API de Laravel (en Docker puerto 8080)
+                  location /api {
+                      proxy_pass http://localhost:8080;
+                      proxy_http_version 1.1;
+                      proxy_set_header Upgrade \$http_upgrade;
+                      proxy_set_header Connection 'upgrade';
+                      proxy_set_header Host \$host;
+                      proxy_cache_bypass \$http_upgrade;
+                  }
+              }
+              EOF
+            sudo ln -sf /etc/nginx/sites-available/intellcar /etc/nginx/sites-enabled/
+            sudo rm -f /etc/nginx/sites-enabled/default
+            sudo nginx -t && sudo systemctl reload nginx
+
             # ── 7. Configuración SSL (Certbot) ──
             # Intentamos generar el certificado. Si falla (por DNS), no bloqueamos el deploy.
             sudo certbot --nginx -d ${{ secrets.DOMAIN_NAME }} --non-interactive --agree-tos --email ${{ secrets.USER_EMAIL }} || echo "Certbot falló, se reintentará en el próximo push o manualmente."
