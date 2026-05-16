@@ -17,7 +17,7 @@ class ComprehendControl extends Controller
 
         $options = [
             'version' => 'latest',
-            'region' => config('services.aws.region', 'us-east-1'),
+            'region' => config('services.aws.region'),
         ];
 
         // Solo usar credenciales explícitas si existen (ej. en desarrollo local).
