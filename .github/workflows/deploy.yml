@@ -44,7 +44,7 @@ jobs:
 
       - name: Build de producción (Angular via Turbo)
         working-directory: ./front
-        run: pnpm run build
+        run: pnpm run build --no-cache
 
       - name: Verificar archivos generados (Debug)
         run: ls -R ./front/apps/browser-client/dist/
@@ -196,6 +196,9 @@ jobs:
             sudo certbot --nginx -d ${{ secrets.DOMAIN_NAME }} --non-interactive --agree-tos --email ${{ secrets.USER_EMAIL }} || echo "Certbot falló, se reintentará en el próximo push o manualmente."
 
             # ── 8. Sincronización del Frontend ──
+            # Limpiar carpeta destino para evitar archivos huérfanos o caché de Nginx
+            sudo rm -rf /var/www/html/*
+            
             # Bajamos los archivos del S3 a la carpeta de Nginx
             # Usamos las credenciales que ya tiene el servidor o el IAM Profile
             sudo aws s3 sync s3://${{ env.S3_BUCKET_FRONTEND }} /var/www/html/ --delete
