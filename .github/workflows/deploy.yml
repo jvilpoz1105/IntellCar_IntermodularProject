@@ -148,8 +148,9 @@ jobs:
             # Esperar un momento a que el contenedor esté listo
             sleep 5
 
-            # ── 5. Instalar dependencias de Composer ──
-            docker exec intellcar_api composer install --no-dev --optimize-autoloader
+            # ── 5. Instalar/Actualizar dependencias de Composer ──
+            docker exec intellcar_api rm -rf vendor
+            docker exec intellcar_api composer update --no-dev --optimize-autoloader --no-interaction
 
             # ── 6. Arreglar permisos de todo el proyecto ──
             docker exec intellcar_api chown -R www-data:www-data /var/www/html
