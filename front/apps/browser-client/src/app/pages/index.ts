@@ -6,6 +6,7 @@ import { AuthService, User } from '../core/services/auth.service';
 import { API_CONFIG } from '../core/config/api.config';
 import gsap from 'gsap';
 import { RelativeTimePipe } from '../shared/pipes/relative-time.pipe';
+import { toast } from 'ngx-sonner';
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -556,15 +557,22 @@ export class EventsComponent implements OnInit {
 
     req.subscribe({
       next: (res) => {
-        event.is_attending = !event.is_attending;
+        const wasAttending = event.is_attending;
+        event.is_attending = !wasAttending;
         event.attendees_count = res.attendees_count;
         this.joiningId = null;
+        if (wasAttending) {
+          toast.info('Has abandonado el evento.');
+        } else {
+          toast.success('¡Te has unido al evento!');
+        }
         if (this.mineOnly && !event.is_attending) {
           this.events = this.events.filter(e => e.event_id !== event.event_id);
         }
       },
       error: () => {
         this.joiningId = null;
+        toast.error('No se pudo procesar la solicitud.');
       },
     });
   }
@@ -878,8 +886,16 @@ export class UniverseComponent implements OnInit {
         this.selected.is_liked = res.liked;
         this.selected.likes_count = res.likes_count;
         this.likeLoading = false;
+        if (res.liked) {
+          toast.success('¡Le has dado like al post!');
+        } else {
+          toast.info('Has quitado el like.');
+        }
       },
-      error: () => { this.likeLoading = false; },
+      error: () => {
+        this.likeLoading = false;
+        toast.error('No se pudo procesar el like.');
+      },
     });
   }
 
@@ -892,8 +908,16 @@ export class UniverseComponent implements OnInit {
       next: (res) => {
         this.selected.author.is_following = res.following;
         this.followLoading = false;
+        if (res.following) {
+          toast.success(`Ahora sigues a ${this.selected.author.user_name}.`);
+        } else {
+          toast.info(`Has dejado de seguir a ${this.selected.author.user_name}.`);
+        }
       },
-      error: () => { this.followLoading = false; },
+      error: () => {
+        this.followLoading = false;
+        toast.error('No se pudo procesar el follow.');
+      },
     });
   }
 
@@ -909,8 +933,12 @@ export class UniverseComponent implements OnInit {
         this.selected.comments.push(res.comment);
         this.newComment = '';
         this.commentLoading = false;
+        toast.success('Comentario publicado.');
       },
-      error: () => { this.commentLoading = false; },
+      error: () => {
+        this.commentLoading = false;
+        toast.error('No se pudo publicar el comentario.');
+      },
     });
   }
 
