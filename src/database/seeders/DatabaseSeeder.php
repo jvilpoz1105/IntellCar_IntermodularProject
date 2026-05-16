@@ -49,6 +49,9 @@ class DatabaseSeeder extends Seeder
             // 8. Events (Dependencies on AppUser, Paddock)
             EventKddSeeder::class,
             EventAttendanceSeeder::class,
+
+            // 9. Extra Factory Data (Random content)
+            FactoryDataSeeder::class,
         ]);
 
         $this->command->info('✅ Base de datos poblada correctamente con datos de prueba!');
