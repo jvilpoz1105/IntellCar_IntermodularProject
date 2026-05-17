@@ -102,6 +102,30 @@ El frontend de IntellCar está organizado como un **Monorepo** moderno utilizand
 - **`front/packages/`**: Librerías y configuraciones compartidas (TypeScript, ESLint, etc.).
 - **`infrastructure/`**: Ficheros de Terraform para el despliegue en AWS.
 
+---
+
+## ☁️ Infraestructura y Despliegue (AWS) | Infrastructure & Deployment
+
+El proyecto utiliza una arquitectura profesional automatizada. | The project uses a professional automated architecture.
+
+### 🇪🇸 Resumen (Español)
+- **Servidor**: AWS EC2 (Ubuntu) con Docker y Nginx.
+- **Base de Datos**: AWS RDS MySQL 8.0 en subred privada.
+- **Almacenamiento**: Buckets S3 para el Frontend y Media.
+- **IA**: AWS Rekognition + Lambda para análisis de imágenes.
+- **CI/CD**: GitHub Actions automatizado.
+- **Acceso**: Dominio DuckDNS con SSL automático (Certbot).
+
+### 🇺🇸 Summary (English)
+- **Server**: AWS EC2 (Ubuntu) running Docker and Nginx.
+- **Database**: AWS RDS MySQL 8.0 in a private subnet.
+- **Storage**: S3 Buckets for Frontend hosting and Media.
+- **AI**: AWS Rekognition + Lambda for image analysis.
+- **CI/CD**: Automated GitHub Actions.
+- **Access**: DuckDNS domain with automated SSL (Certbot).
+
+---
+
 ### Guía de Desarrollo (Angular)
 Cuando desarrolles el cliente, sigue esta organización para mantener el código limpio:
 

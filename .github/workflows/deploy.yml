@@ -2,7 +2,8 @@ name: 🚀 Deploy IntellCar to AWS
 
 on:
   push:
-    branches: [ "main" ] # Se dispara cada vez que se hace push a main
+    branches: [ "main", "jose" ] # Se dispara en push a main o jose
+  workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
@@ -10,7 +11,8 @@ env:
 
 jobs:
   # ─────────────────────────────────────────────────────
-  # JOB 1: Build de Angular y subida al Bucket S3
+  # JOB 1: Build de Angular y subida al Bucket S3 (AWS)  - 
+  # ─────────────────────────────────────────────────────- 
   # ─────────────────────────────────────────────────────
   deploy-frontend:
     name: 🌐 Deploy Frontend (S3)
@@ -34,9 +36,11 @@ jobs:
         working-directory: ./front
         run: pnpm install --frozen-lockfile
 
-      - name: Configurar URL de la API para producción
+      - name: Generar environment.prod.ts dinámicamente
+        working-directory: ./front/apps/browser-client
         run: |
-          sed -i "s|http://localhost:8080/api|http://${{ secrets.SERVER_IP }}/api|g" front/apps/browser-client/src/app/core/config/api.config.ts
+          mkdir -p src/environments
+          echo "export const environment = { production: true, apiUrl: 'https://${{ secrets.DOMAIN_NAME }}/api' };" > src/environments/environment.prod.ts
 
       - name: Build de producción (Angular via Turbo)
         working-directory: ./front
@@ -57,10 +61,11 @@ jobs:
             --delete
 
   # ─────────────────────────────────────────────────────
-  # JOB 2: Deploy de la API Laravel en EC2 (Docker)
+  # JOB 2: Deploy de la API Laravel en EC2 (Docker) -
   # ─────────────────────────────────────────────────────
   deploy-api:
     name: 🔧 Deploy API (EC2 + Docker)
+    needs: deploy-frontend
     runs-on: ubuntu-latest
 
     steps:
@@ -74,25 +79,24 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # ── 1. Crear directorio del proyecto si no existe ──
-            mkdir -p /home/ubuntu/intellcar-project
-
-            # ── 2. Clonar o actualizar el repositorio ──
-            if [ -d "/home/ubuntu/intellcar-project/.git" ]; then
+            # 1. Detener contenedores actuales si existen para liberar los volúmenes
+            if [ -d "/home/ubuntu/intellcar-project" ]; then
               cd /home/ubuntu/intellcar-project
-              git fetch origin main
-              git reset --hard origin/main
-            else
-              git clone https://github.com/${{ github.repository }}.git /home/ubuntu/intellcar-project
-              cd /home/ubuntu/intellcar-project
+              docker-compose -f docker-compose.prod.yml down || true
+              cd ..
             fi
+
+            # 2. Limpiar y Clonar rama jose
+            rm -rf /home/ubuntu/intellcar-project
+            git clone -b jose https://github.com/${{ github.repository }}.git /home/ubuntu/intellcar-project
+            cd /home/ubuntu/intellcar-project
 
             # ── 3. Crear el .env de PRODUCCIÓN dinámicamente ──
             cat > src/.env << 'ENVEOF'
             APP_NAME=IntellCar
             APP_ENV=production
             APP_KEY=${{ secrets.APP_KEY }}
-            APP_DEBUG=false
+            APP_DEBUG=true
             APP_URL=http://${{ secrets.SERVER_IP }}
 
             APP_LOCALE=en
@@ -135,8 +139,11 @@ jobs:
             VITE_APP_NAME="IntellCar"
             ENVEOF
 
-            # ── 4. Reconstruir el contenedor de Laravel ──
+            # ── 4. Reconstruir SOLO el contenedor de Laravel (sin BD local) ──
             docker-compose -f docker-compose.prod.yml up -d --build
+
+            # Esperar un momento a que el contenedor esté listo
+            sleep 5
 
             # ── 5. Instalar dependencias de Composer ──
             docker exec intellcar_api composer install --no-dev --optimize-autoloader
@@ -150,3 +157,18 @@ jobs:
             docker exec intellcar_api php artisan config:cache
             docker exec intellcar_api php artisan route:cache
             docker exec intellcar_api php artisan view:cache
+
+            # ── 7. Configuración SSL (Certbot) ──
+            # Intentamos generar el certificado. Si falla (por DNS), no bloqueamos el deploy.
+            sudo certbot --nginx -d ${{ secrets.DOMAIN_NAME }} --non-interactive --agree-tos --email ${{ secrets.USER_EMAIL }} || echo "Certbot falló, se reintentará en el próximo push o manualmente."
+
+            # ── 8. Sincronización del Frontend ──
+            # Bajamos los archivos del S3 a la carpeta de Nginx
+            # Usamos las credenciales que ya tiene el servidor o el IAM Profile
+            sudo aws s3 sync s3://${{ env.S3_BUCKET_FRONTEND }} /var/www/html/ --delete
+            sudo chown -R www-data:www-data /var/www/html
+            sudo chmod -R 755 /var/www/html
+
+            # ── 9. Reinicio final de Nginx para aplicar cambios ──
+            sudo systemctl restart nginx
+

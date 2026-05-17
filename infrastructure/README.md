@@ -1,65 +1,66 @@
-# Infraestructura de IntellCar
+# 🚀 Infraestructura de IntellCar (AWS + Terraform)
 
-Este directorio contiene el código en Terraform (IaC - Infraestructura como Código) para desplegar la arquitectura completa del proyecto IntellCar alojado en Amazon Web Services (AWS).
+Este directorio contiene la arquitectura **IaC (Infrastructure as Code)** de IntellCar. Hemos diseñado una solución escalable, segura y totalmente automatizada en Amazon Web Services.
 
-## Arquitectura Desplegada
+## 🏗️ Componentes de la Arquitectura
 
-La infraestructura se compone de los siguientes elementos (todos gestionados automáticamente):
+### 1. Computación y Web Server (`compute.tf`)
+- **Instancia EC2 (`t3.small`)**: El cerebro de la operación. Ejecuta un servidor Ubuntu Server 22.04.
+- **Docker & Docker Compose**: El servidor viene auto-configurado para levantar la API Laravel en contenedores de forma aislada.
+- **Nginx Reverse Proxy**: Gestiona el tráfico entrante.
+- **DuckDNS & SSL (Certbot)**: La instancia se auto-registra en DuckDNS y obtiene certificados SSL de Let's Encrypt automáticamente al arrancar. ¡Tu web siempre será HTTPS!
 
-1. **Red y Seguridad (`network.tf`)**
-   - Una red privada virtual (VPC) con dos subredes públicas en zonas de disponibilidad diferentes (`us-east-1a` y `us-east-1b`).
-   - Una **IP Elástica** (IP estática que no cambia si se reinicia la máquina).
-   - "Security Groups" (Firewalls) que protegen los accesos. Por defecto, exponen los puertos HTTP (80) y HTTPS (443) y blindan el servidor de base de datos.
+### 2. Almacenamiento Inteligente (`storage.tf`)
+- **Bucket `intellcar-web`**: Aloja el frontend de Angular. Está configurado como *Static Website Hosting*.
+- **Bucket `intellcar-media`**: Almacena las fotos de anuncios y posts. Tiene habilitado `force_destroy` para facilitar pruebas en desarrollo y políticas de acceso público para lectura.
 
-2. **Servidor Backend e Inyección de Dependencias (`compute.tf`)**
-   - Máquina virtual principal basada en **Ubuntu Server 22.04 LTS** (`t3.small`).
-   - Cuenta con un script en base que auto-instala **Docker** y **Docker Compose** en la máquina al encender. Permitiendo arrancar la API rapidísimo mediante contenedores.
+### 3. Base de Datos Gestionada (`database.tf`)
+- **AWS RDS (MySQL 8.0)**: Base de datos robusta y gestionada.
+- **Seguridad Máxima**: Está en una subred privada. Solo la instancia EC2 tiene permiso para hablar con la base de datos (puerto 3306).
 
-3. **Base de Datos Gestionada (`database.tf`)**
-   - Motor automatizado mediante AWS RDS con **MySQL 8.0** (`db.t3.micro`).
-   - Cuenta con alta disponibilidad y máxima seguridad, ya que no sale de la red privada: su sistema de firewall fuerza a que *únicamente el Servidor EC2* tenga la capacidad de acceder al motor de MySQL. Todo el resto de la red mundial (Internet) lo tendrá denegado.
-
-4. **Almacenamiento Masivo en la Nube (`storage.tf`)**
-   - Bucket **`intellcar_media`**: Almacén masivo con políticas públicas pre-configuradas para lectura global de imágenes fotográficas (anuncios, posts de garaje automovilístico, imágenes de perfil y más).
-   - Bucket **`angular_frontend`**: Bucket configurado para estar expuesto a todo internet usando la modalidad *Static Website Hosting*. Aquí el cliente depositará los archivos listos (compilados) y servirá la web oficial de Angular sin necesitar un servidor apache o similar.
+### 4. Inteligencia Artificial (`lambdas.tf`)
+- **AWS Rekognition**: Cuando subes una foto (`.jpg`, `.png`) al bucket de media, se dispara automáticamente una **Función Lambda**.
+- **Proceso**: La Lambda analiza la imagen con Rekognition, extrae etiquetas (ej: "Car", "Luxury") y notifica a la API de Laravel mediante un token de seguridad interno para validar el contenido.
 
 ---
 
-## Guía Rápida de Despliegue 
+## 🔄 Flujo de Despliegue Continuo (CI/CD)
 
-### Requisitos Previos
-Debes contar con el archivo de la "llave" SSH (archivo `vockey.pem`) descargado en tu ordenador de forma segura. Y las credenciales de AWS introducidas en tu directorio local (Ej, Windows: `C:\Users\tuusuario\.aws\credentials`).
+No necesitas desplegar a mano. El archivo `.github/workflows/deploy.yml` gestiona todo el ciclo de vida:
 
-### Paso 1: Inicialización
-Ubícate en esta misma ruta (`infrastructure`) abriendo tu terminal y teclea el siguiente comando de iniciación obligatoria:
+1.  **Push a `main`**: Al subir código, se activan dos rutas paralelas.
+2.  **Frontend**: Se compila Angular, se genera el `environment.prod.ts` con la IP/Dominio real y se sincroniza con el **S3 de Frontend**.
+3.  **Backend**: GitHub se conecta vía SSH a la EC2, descarga el nuevo código, crea el `.env` desde los **GitHub Secrets** y reinicia los contenedores Docker.
+
+---
+
+## 🌐 Visualización y Post-Despliegue
+
+Gracias a la integración con **DuckDNS**, ya no necesitas recordar IPs raras. 
+
+1.  **Acceso Web**: Entra directamente a `https://tu-dominio.duckdns.org`.
+2.  **SSL**: Verás el candado verde en el navegador. El script de `user_data` de la EC2 se encarga de renovar el certificado y configurar Nginx para forzar el tráfico a HTTPS.
+3.  **Sincronización**: El frontend se actualiza cada 5 minutos automáticamente en el servidor mediante un CRON job que sincroniza el S3 con la carpeta `/var/www/html`.
+
+---
+
+## 🛠️ Comandos Útiles
+
+Si necesitas hacer cambios manuales en la infraestructura:
+
 ```bash
+# Inicializar (solo la primera vez)
 terraform init
-```
 
-### Paso 2: Ejecución e Inyección de Variables Seguras
-Lanza directamente el comando real de construcción:
-```bash
+# Ver qué cambios se van a realizar
+terraform plan
+
+# Aplicar cambios (pedirá confirmación)
 terraform apply
+
+# Destruir toda la infraestructura (¡Cuidado!)
+terraform destroy
 ```
 
-Durante el proceso serás pausado por la consola para completar dos parámetros que, por mayor seguridad, han sido eliminados del código y extraidos a la consola:
-- **`db_password`**: Será tu nueva contraseña *Root* de MySQL. Invéntele una contraseña robusta, introdúcela y recuerda escribirla en un papel. Lo necesitarás en el paso final.
-- **`ssh_key_name`**: Debes declarar el nombre estricto que recibe el archivo PEM dentro del panel de AWS. Si usas cuentas de Learner/Academy predeterminadas de estudiante de Amazon esto recibirá el nombre fijo: **`vockey`** y teclea <kbd>Enter</kbd>.
-
-Terraform te preguntará por última vez si estás de acuerdo en empezar. Escribe literalmente **`yes`** y pulsa <kbd>Enter</kbd>. Comenzará un proceso que se demorará de entre 3 a 5 minutos aprox.
-
-### Paso 3: Vinculación Post-Despliegue
-
-¡Tu infra se levantó! Finalizado el proceso, Terraform imprimirá en la consola dos valores vitales (Los '*Outputs*'):
-1. **`database_endpoint`**: La gran URL de la BBDD a la cual la aplicación debe conectarse.
-2. **`server_public_ip`**: La IP de tu máquina EC2 para interactuar con su red (hacer ssh o entrar al endpoint desde local o tu explorador).
-
-Copia en el portapapeles ese enorme string de `database_endpoint`. Abandona esta carpeta de código en terraform y ahora ve hasta la carpeta general del proyecto donde esté tu servidor actual, y modifica el archivo **`.env`** cambiando los valores de base de datos a los aportados por Terraform:
-
-```env
-DB_HOST=El_Mega_Endpoint_que_te_Acaba_de_Imprimir_Aqui_Sin_El_Puerto
-DB_PORT=3306
-DB_DATABASE=intellcar_db  <-- (Este es el que se le marcó a Terraform por código fuente)
-DB_USERNAME=admin         <-- (El admin oficial de RDS declarado en Terraform)
-DB_PASSWORD=La_misma_Contraseña_que_Le_asigaste_en_la_consola_durante_Apply
-```
+> [!IMPORTANT]
+> Los buckets S3 tienen activado `force_destroy = true`. Esto permite que `terraform destroy` funcione incluso si hay fotos dentro, borrándolo todo de golpe. ¡Útil para desarrollo!

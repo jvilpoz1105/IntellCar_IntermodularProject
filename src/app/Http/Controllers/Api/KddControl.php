@@ -3,33 +3,54 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Filters\KddEventFilter;
 use App\Models\EventKdd;
 use App\Http\Resources\Api\KddEventResource;
 use App\Http\Resources\Api\KddEventSummaryResource;
+use App\Traits\ModeratesContent;
 use Illuminate\Http\Request;
 
 class KddControl extends Controller
 {
+    use ModeratesContent;
     /**
-     * Obtener listado general (solo datos más importantes).
-     * Acepta query param ?mine=1 para filtrar solo eventos en los que participa el usuario autenticado.
+     * Obtener listado general con filtros opcionales.
+     *
+     * Parámetros de query soportados:
+     *  Propios:      title[like], description[like], city[eq|like], location[like],
+     *                dateFrom[gte], dateTo[lte], maxSlots[gte|lte]
+     *  Relacionales: creator[eq|like], paddock[eq|like]
+     *
+     * Ejemplo: GET /api/kdd?city[like]=Madrid&dateFrom[gte]=2025-06-01&paddock[like]=drift
      */
     public function index(Request $request)
     {
-        $query = EventKdd::with(['creator:user_id,user_name,profile_picture', 'paddock', 'attendees'])
-            ->where('event_date', '>=', now())
+        $filter  = new KddEventFilter();
+        $queries = $filter->newTransform($request);
+
+        $query = EventKdd::query()
+            ->where('event_date', '>=', now())   // Solo eventos futuros
             ->where('visible', true)
             ->whereNull('onDeleteRequest');
 
-        // Filtro: solo eventos en los que el usuario autenticado está inscrito
-        if ($request->boolean('mine') && $request->user('sanctum')) {
-            $userId = $request->user('sanctum')->user_id;
-            $query->whereHas('attendees', function ($q) use ($userId) {
-                $q->where('app_user.user_id', $userId);
-            });
+        // ── Filtros sobre campos propios ──────────────────────────────────────
+        if (!empty($queries['main'])) {
+            $query->where($queries['main']);
         }
 
-        $events = $query->orderBy('event_date', 'asc')->paginate(20);
+        // ── Filtros relacionales simples (creator, paddock) ───────────────────
+        foreach ($queries['relations'] as $relationPath => $clauses) {
+            foreach ($clauses as $clause) {
+                $query->whereHas($relationPath, function ($q) use ($clause) {
+                    $q->where($clause['column'], $clause['operator'], $clause['value']);
+                });
+            }
+        }
+
+        $events = $query
+            ->with(['creator:user_id,username,profile_picture', 'paddock'])
+            ->orderBy('event_date', 'asc')
+            ->paginate(20);
 
         return KddEventSummaryResource::collection($events);
     }
@@ -43,6 +64,51 @@ class KddControl extends Controller
         $event = EventKdd::with(['creator', 'paddock', 'attendees'])->findOrFail($id);
         
         return new KddEventResource($event);
+    }
+
+    /**
+     * Crear un nuevo evento/quedada.
+     */
+    public function store(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'title'             => 'required|string|max:150',
+            'event_description' => 'required|string',
+            'event_date'        => 'required|date|after:now',
+            'location_name'     => 'nullable|string|max:255',
+            'address'           => 'nullable|string|max:255',
+            'city'              => 'nullable|string|max:100',
+            'latitude'          => 'nullable|numeric|between:-90,90',
+            'longitude'         => 'nullable|numeric|between:-180,180',
+            'max_participants'  => 'nullable|integer|min:0',
+            'paddock_id'        => 'required|exists:paddock,paddock_id',
+            'ai_metadata'       => 'nullable|array',
+            'media'             => 'nullable|array',
+            'media.*'           => 'string'
+        ]);
+
+        // --- COMPROBACIÓN EXTRA DE SEGURIDAD (Moderación) ---
+        if (!empty($validated['media'])) {
+            if (!$this->validateModeration($validated['media'])) {
+                return response()->json([
+                    'message' => 'Una o más imágenes contienen contenido inapropiado y no pueden ser publicadas.'
+                ], 422);
+            }
+        }
+
+        $event = EventKdd::create([
+            ...$validated,
+            'creator_id' => $user->user_id,
+            'visible'    => true,
+            'ai_metadata' => $validated['ai_metadata'] ?? null,
+        ]);
+
+        return response()->json([
+            'message' => 'Evento creado exitosamente',
+            'event'   => $event->load(['creator', 'paddock']),
+        ], 201);
     }
 
     /**

@@ -32,5 +32,10 @@ export class App implements OnInit {
 			);
 		});
 	}
+
+	togglePublishModal() { this.isPublishModalOpen.update(v => !v); }
+	toggleSocialModal()  { this.isSocialModalOpen.update(v => !v); }
+	toggleKddModal()     { this.isKddModalOpen.update(v => !v); }
+	toggleGarageModal()  { this.isGarageModalOpen.update(v => !v); }
 }
 

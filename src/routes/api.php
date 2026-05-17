@@ -6,6 +6,10 @@ use App\Http\Controllers\Api\MarketControl;
 use App\Http\Controllers\Api\UnivControl;
 use App\Http\Controllers\Api\KddControl;
 use App\Http\Controllers\Api\ProfileControl;
+use App\Http\Controllers\Api\RekoControl;
+use App\Http\Controllers\Api\ComprehendControl;
+use App\Http\Controllers\Api\MakeController;
+use App\Http\Controllers\Api\PaddockController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +30,12 @@ Route::prefix('auth')->group(function () {
 
 // --- RUTAS PÚBLICAS DE SERVICIOS (Lectura) ---
 
+// Catálogo de vehículos (público - sin token)
+Route::get('/makes', [MakeController::class, 'index']);
+Route::get('/makes/{id}/models', [MakeController::class, 'models']);
+Route::get('/makes/{id}/engines', [MakeController::class, 'engines']);
+Route::get('/paddocks', [PaddockController::class, 'index']);
+
 // Market (Anuncios)
 Route::get('/market', [MarketControl::class, 'index']);
 Route::get('/market/{id}', [MarketControl::class, 'show']);
@@ -38,6 +48,14 @@ Route::get('/social/{id}', [UnivControl::class, 'show']);
 Route::get('/kdds', [KddControl::class, 'index']);
 Route::get('/kdds/{id}', [KddControl::class, 'show']);
 
+
+// Internal - Endpoint para Lambda
+Route::patch('/internal/media-verify', [RekoControl::class, 'internalVerify']);
+
+// --- MEDIA & TEXT AI ANALYSIS (Temporalmente públicos para pruebas) ---
+Route::post('/media/presigned', [RekoControl::class, 'presigned']);
+Route::post('/media/analyze', [RekoControl::class, 'analyze']);
+Route::post('/text/analyze', [ComprehendControl::class, 'analyzeText']);
 
 // --- RUTAS PROTEGIDAS (Requieren Token) ---
 Route::middleware('auth:sanctum')->group(function () {
@@ -67,6 +85,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/garage/{id}', [ProfileControl::class, 'updateGarageItem']); 
     Route::delete('/profile/garage/{id}', [ProfileControl::class, 'removeGarageItem']);
     
+    // --- CREACIÓN DE CONTENIDO (Protegido y con límites) ---
+    Route::post('/market', [MarketControl::class, 'store']);
+    Route::post('/social', [UnivControl::class, 'store']);
+    Route::post('/kdds', [KddControl::class, 'store']);
+
     // Borrar un usuario (Solo Admin)
     Route::delete('/users/{id}', [ProfileControl::class, 'destroy'])->middleware('role:admin');
 
@@ -97,4 +120,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/social/{id}', [UnivControl::class, 'destroy'])->middleware('role:admin');
     Route::delete('/kdds/{id}', [KddControl::class, 'destroy'])->middleware('role:admin');
 
+    // --- MEDIA & TEXT AI ANALYSIS (Protegidos) --- DESCOMENTAR PARA USAR EN PRODUCCIÓN!
+    // // Route::post('/media/presigned', [RekoControl::class, 'presigned']);
+    // // Route::post('/media/analyze', [RekoControl::class, 'analyze']);
+    // // Route::post('/text/analyze', [ComprehendControl::class, 'analyzeText']);
 });
