@@ -32,6 +32,7 @@ class PostFactory extends Factory
             'engine_id' => $this->faker->boolean(60)
                 ? (CarEngine::query()->inRandomOrder()->value('engine_id') ?? CarEngine::factory())
                 : null,
+            'visible' => true,
             'created_at' => $this->faker->dateTimeBetween('-8 months', 'now'),
         ];
     }

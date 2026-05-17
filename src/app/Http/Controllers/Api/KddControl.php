@@ -47,6 +47,14 @@ class KddControl extends Controller
             }
         }
 
+        // ── Filtro de eventos propios (asistencia) ────────────────────────────
+        if ($request->boolean('mine') && $request->user('sanctum')) {
+            $userId = $request->user('sanctum')->user_id;
+            $query->whereHas('attendees', function ($q) use ($userId) {
+                $q->where('app_user.user_id', $userId);
+            });
+        }
+
         $events = $query
             ->with(['creator:user_id,user_name,profile_picture', 'paddock'])
             ->orderBy('event_date', 'asc')

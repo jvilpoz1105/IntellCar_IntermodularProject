@@ -372,11 +372,8 @@ export class MarketplaceComponent implements OnInit {
     this.errorMessage = '';
 
     let params = new HttpParams();
-    if (this.visibleOnly) {
-      params = params.set('visible', '1');
-    }
     if (this.selectedType) {
-      params = params.set('ad_type', this.selectedType);
+      params = params.set('type[eq]', this.selectedType);
     }
 
     this.http
