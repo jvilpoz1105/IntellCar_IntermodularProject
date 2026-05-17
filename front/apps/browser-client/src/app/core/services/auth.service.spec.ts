@@ -73,7 +73,7 @@ describe('AuthService', () => {
   });
 
   it('login() should propagate error message on failure', () => {
-    let receivedError: Error | null = null;
+    let receivedError: unknown = null;
 
     service.login('bad@test.com', 'wrong').subscribe({
       error: (err) => (receivedError = err),
