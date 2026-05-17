@@ -20,12 +20,9 @@ interface NavItem {
       <!-- Logo Section -->
       <div class="p-6 border-b border-slate-700/50">
         <div class="flex items-center gap-3 mb-2">
-          <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-green-400 to-cyan-400 flex items-center justify-center text-slate-900">
-            <span [innerHTML]="s(zapIcon)"></span>
-          </div>
           <div>
             <h2 class="font-black text-lg bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent">IntellCar</h2>
-            <p class="text-xs text-slate-400">v0.0.1</p>
+            <p class="text-xs text-slate-400">v1.0.0</p>
           </div>
         </div>
       </div>
