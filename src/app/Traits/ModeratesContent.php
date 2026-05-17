@@ -41,7 +41,7 @@ trait ModeratesContent
                 }
             } catch (\Exception $e) {
                 Log::warning("AWS Rekognition no disponible para moderación en backend (usando fallback local): " . $e->getMessage());
-                // Bajo restricciones de cuenta (Learner Lab), permitimos continuar para no interrumpir el flujo del usuario
+                //Bajo restricciones de cuenta (Learner Lab), permitimos continuar para no interrumpir el flujo del usuario
                 return true;
             }
         }
