@@ -67,6 +67,40 @@ class MarketControl extends Controller
      *     tags={"Anuncios"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="ad_title", type="string", example="BMW Serie 3 320d Automatico"),
+     *             @OA\Property(property="ad_type", type="string", enum={"new","km0","used","renting","leasing","supcription"}, example="used"),
+     *             @OA\Property(property="ad_details", type="string", example="Excelente estado, mantenimiento al día"),
+     *             @OA\Property(property="price", type="number", format="float", example=23990.00),
+     *             @OA\Property(property="kilometers", type="integer", example=45000),
+     *             @OA\Property(property="car_color", type="string", enum={"blanco","negro","gris","plata","rojo","azul","verde","amarillo","naranja","otro"}, example="gris"),
+     *             @OA\Property(property="year_manufacture", type="integer", example=2020),
+     *             @OA\Property(property="region", type="string", example="Madrid"),
+     *             @OA\Property(property="city", type="string", example="Alcobendas"),
+     *             @OA\Property(property="visible", type="boolean", example=true),
+     *             @OA\Property(property="model_id", type="integer", example=12),
+     *             @OA\Property(property="engine_id", type="integer", example=5)
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Anuncio actualizado exitosamente"),
+     *     @OA\Response(response=403, description="Sin permiso para editar este anuncio"),
+     *     @OA\Response(response=404, description="Anuncio no encontrado")
+     * )
+     * @OA\Patch(
+     *     path="/api/market/{id}",
+     *     summary="Actualizar parcialmente un anuncio",
+     *     tags={"Anuncios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="price", type="number", format="float", example=21500.00),
+     *             @OA\Property(property="visible", type="boolean", example=false),
+     *             @OA\Property(property="ad_details", type="string", example="Precio negociable")
+     *         )
+     *     ),
      *     @OA\Response(response=200, description="Anuncio actualizado exitosamente"),
      *     @OA\Response(response=403, description="Sin permiso para editar este anuncio")
      * )

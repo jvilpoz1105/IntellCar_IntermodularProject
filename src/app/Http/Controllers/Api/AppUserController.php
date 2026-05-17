@@ -93,6 +93,32 @@ class AppUserController extends Controller
      *     tags={"Usuarios"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="user_name", type="string", example="Juan García"),
+     *             @OA\Property(property="contact_email", type="string", format="email", example="contact@example.com"),
+     *             @OA\Property(property="address", type="string", example="Calle Mayor 10"),
+     *             @OA\Property(property="phone", type="string", example="+34600000000"),
+     *             @OA\Property(property="user_password", type="string", format="password", example="nuevaPass123"),
+     *             @OA\Property(property="paddock_id", type="integer", example=2)
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Usuario actualizado correctamente"),
+     *     @OA\Response(response=403, description="Sin permiso para editar este perfil")
+     * )
+     * @OA\Patch(
+     *     path="/api/users/{id}",
+     *     summary="Actualizar parcialmente un usuario",
+     *     tags={"Usuarios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="user_name", type="string", example="Nuevo nombre"),
+     *             @OA\Property(property="phone", type="string", example="+34699999999")
+     *         )
+     *     ),
      *     @OA\Response(response=200, description="Usuario actualizado correctamente"),
      *     @OA\Response(response=403, description="Sin permiso para editar este perfil")
      * )
