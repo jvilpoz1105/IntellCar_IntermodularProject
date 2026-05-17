@@ -9,6 +9,239 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/users": {
+            "get": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Listar todos los usuarios",
+                "operationId": "ff17b36137eb782b19c28011098717a1",
+                "responses": {
+                    "200": {
+                        "description": "Listado de usuarios"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (solo admin)"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/users/{id}": {
+            "get": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Obtener perfil de un usuario",
+                "operationId": "8e902077d77bb2f06b9a6b1ddc24113d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Datos del usuario"
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Actualizar datos de un usuario",
+                "operationId": "056a4049208d7aa5c35062df8a0c0d2c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "user_name": {
+                                        "type": "string",
+                                        "example": "Juan García"
+                                    },
+                                    "contact_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "contact@example.com"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "Calle Mayor 10"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+34600000000"
+                                    },
+                                    "user_password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "nuevaPass123"
+                                    },
+                                    "paddock_id": {
+                                        "type": "integer",
+                                        "example": 2
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuario actualizado correctamente"
+                    },
+                    "403": {
+                        "description": "Sin permiso para editar este perfil"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Eliminar un usuario",
+                "operationId": "d2ea6c493b69c5477cbbf751af455e70",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuario eliminado correctamente"
+                    },
+                    "403": {
+                        "description": "Solo los administradores pueden eliminar usuarios"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Actualizar parcialmente un usuario",
+                "operationId": "4e6cd8c9b35cc1f74f9fde36b603950d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "user_name": {
+                                        "type": "string",
+                                        "example": "Nuevo nombre"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+34699999999"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuario actualizado correctamente"
+                    },
+                    "403": {
+                        "description": "Sin permiso para editar este perfil"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/users/{id}/follow": {
+            "post": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Seguir o dejar de seguir a un usuario",
+                "operationId": "3305a53e246b008f9425b0eb8f368527",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Estado del seguimiento actualizado"
+                    },
+                    "422": {
+                        "description": "No puedes seguirte a ti mismo"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/auth/register": {
             "post": {
                 "tags": [
@@ -193,28 +426,225 @@
                 ]
             }
         },
-        "/api/events": {
+        "/api/kdds": {
             "get": {
                 "tags": [
                     "Eventos"
                 ],
-                "summary": "Obtener listado de eventos/quedadas",
-                "operationId": "e529c81e6aaec82f49950a87ed881f57",
+                "summary": "Listar eventos/quedadas",
+                "operationId": "5d0c4e43771f1acef13f543654015ee5",
+                "parameters": [
+                    {
+                        "name": "mine",
+                        "in": "query",
+                        "description": "Filtrar solo eventos en los que participa el usuario autenticado",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Listado de eventos"
+                        "description": "Listado paginado de eventos"
                     }
                 }
-            },
-            "post": {
+            }
+        },
+        "/api/kdds/{id}": {
+            "get": {
                 "tags": [
                     "Eventos"
                 ],
-                "summary": "Crear un nuevo evento",
-                "operationId": "e958e1c6c275d5f9b7ebcd837903d0ef",
+                "summary": "Obtener detalle de un evento",
+                "operationId": "ea39d7cdab9c1d4d534fa8e66f5e6e42",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
-                    "201": {
-                        "description": "Evento creado"
+                    "200": {
+                        "description": "Detalle del evento con asistentes"
+                    },
+                    "404": {
+                        "description": "Evento no encontrado"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Eventos"
+                ],
+                "summary": "Actualizar un evento",
+                "operationId": "ac058d56496da80bb358490bfc207cfc",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Quedada Madrid Sur"
+                                    },
+                                    "event_description": {
+                                        "type": "string",
+                                        "example": "Descripción del evento"
+                                    },
+                                    "event_date": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2025-07-01T10:00:00Z"
+                                    },
+                                    "location_name": {
+                                        "type": "string",
+                                        "example": "Circuito del Jarama"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "Ctra. de Burgos, km 28"
+                                    },
+                                    "city": {
+                                        "type": "string",
+                                        "example": "San Sebastián de los Reyes"
+                                    },
+                                    "latitude": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 40.6
+                                    },
+                                    "longitude": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -3.6
+                                    },
+                                    "max_participants": {
+                                        "type": "integer",
+                                        "example": 50
+                                    },
+                                    "paddock_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Evento actualizado exitosamente"
+                    },
+                    "403": {
+                        "description": "Sin permiso para editar este evento"
+                    },
+                    "404": {
+                        "description": "Evento no encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Eventos"
+                ],
+                "summary": "Eliminar un evento definitivamente",
+                "operationId": "03c960545d9d4b264f61938fab64faad",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Evento y sus asistentes eliminados exitosamente"
+                    },
+                    "403": {
+                        "description": "Solo los administradores pueden eliminar eventos"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Eventos"
+                ],
+                "summary": "Actualizar parcialmente un evento",
+                "operationId": "c9b374302b79cc27fe19152ad268ea20",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Nuevo título"
+                                    },
+                                    "event_date": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2025-08-15T10:00:00Z"
+                                    },
+                                    "city": {
+                                        "type": "string",
+                                        "example": "Madrid"
+                                    },
+                                    "max_participants": {
+                                        "type": "integer",
+                                        "example": 30
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Evento actualizado exitosamente"
+                    },
+                    "403": {
+                        "description": "Sin permiso para editar este evento"
                     }
                 },
                 "security": [
@@ -224,30 +654,47 @@
                 ]
             }
         },
-        "/api/events/{id}": {
-            "get": {
-                "tags": [
-                    "Eventos"
-                ],
-                "summary": "Obtener detalles de un evento",
-                "operationId": "c0f602d773798994c228d99dbd63b842",
-                "responses": {
-                    "200": {
-                        "description": "Detalles del evento"
-                    }
-                }
-            }
-        },
-        "/api/events/{id}/join": {
+        "/api/kdds/{id}/join": {
             "post": {
                 "tags": [
                     "Eventos"
                 ],
                 "summary": "Unirse a un evento",
-                "operationId": "5e21c67158b8ec101710eb3fd34940aa",
+                "operationId": "a8d37c8aa26f9c6c95dff0d680fc313d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Te has unido al evento"
+                        "description": "Te has unido al evento correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "attendees_count": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Ya estás inscrito en este evento"
+                    },
+                    "422": {
+                        "description": "El evento ha alcanzado el límite de participantes"
                     }
                 },
                 "security": [
@@ -255,18 +702,44 @@
                         "sanctum": []
                     }
                 ]
-            }
-        },
-        "/api/events/{id}/leave": {
+            },
             "delete": {
                 "tags": [
                     "Eventos"
                 ],
-                "summary": "Salir de un evento",
-                "operationId": "1771666fc570015eed277ab66e729e4c",
+                "summary": "Abandonar un evento",
+                "operationId": "a54f9525a846d4cf15be4b865d9e6951",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Has salido del evento"
+                        "description": "Has abandonado el evento",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "attendees_count": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No estás inscrito en este evento"
                     }
                 },
                 "security": [
@@ -276,84 +749,286 @@
                 ]
             }
         },
-        "/api/makes": {
-            "get": {
+        "/api/kdds/{id}/soft-delete": {
+            "patch": {
                 "tags": [
-                    "Marcas"
+                    "Eventos"
                 ],
-                "summary": "Obtener listado de marcas de coches",
-                "operationId": "7c4df47d577a536121941f589aff0ad8",
+                "summary": "Solicitar eliminación de un evento",
+                "operationId": "6caa1ebddbfc3b36be0f4aed80316412",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Listado de marcas"
+                        "description": "Eliminación del evento solicitada exitosamente"
+                    },
+                    "403": {
+                        "description": "Sin permiso para solicitar la eliminación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/market": {
+            "get": {
+                "tags": [
+                    "Anuncios"
+                ],
+                "summary": "Listar anuncios de coches",
+                "operationId": "ff0df5e82e0424dbe999c42d21b385d6",
+                "parameters": [
+                    {
+                        "name": "visible",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "ad_type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Listado de anuncios"
                     }
                 }
             }
         },
-        "/api/makes/{id}": {
+        "/api/market/{id}": {
             "get": {
                 "tags": [
-                    "Marcas"
+                    "Anuncios"
                 ],
-                "summary": "Obtener detalles de una marca",
-                "operationId": "960d6cb4aabb7dd4fffeec01fb6c2d57",
-                "responses": {
-                    "200": {
-                        "description": "Detalles de la marca"
+                "summary": "Obtener detalle de un anuncio",
+                "operationId": "881e69fae1f38f0a20901aaac23777dd",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
                     }
-                }
-            }
-        },
-        "/api/paddocks": {
-            "get": {
-                "tags": [
-                    "Paddocks"
                 ],
-                "summary": "Obtener listado de paddocks/comunidades",
-                "operationId": "da1ce883ac31abbdf8ec70ee76d50f4d",
                 "responses": {
                     "200": {
-                        "description": "Listado de paddocks"
-                    }
-                }
-            }
-        },
-        "/api/paddocks/{id}": {
-            "get": {
-                "tags": [
-                    "Paddocks"
-                ],
-                "summary": "Obtener detalles de un paddock",
-                "operationId": "ad0d70b239c3dafb114d48366af01c17",
-                "responses": {
-                    "200": {
-                        "description": "Detalles del paddock"
-                    }
-                }
-            }
-        },
-        "/api/posts": {
-            "get": {
-                "tags": [
-                    "Posts"
-                ],
-                "summary": "Obtener listado de posts",
-                "operationId": "3fda362e2e082b5357ac416e7767e435",
-                "responses": {
-                    "200": {
-                        "description": "Listado de posts"
+                        "description": "Detalle del anuncio"
+                    },
+                    "404": {
+                        "description": "Anuncio no encontrado"
                     }
                 }
             },
-            "post": {
+            "put": {
                 "tags": [
-                    "Posts"
+                    "Anuncios"
                 ],
-                "summary": "Crear un nuevo post",
-                "operationId": "dcb66200c3132996151884ac232cf439",
+                "summary": "Actualizar un anuncio",
+                "operationId": "e68bc392099c5d7c6bd634fc89426908",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "ad_title": {
+                                        "type": "string",
+                                        "example": "BMW Serie 3 320d Automatico"
+                                    },
+                                    "ad_type": {
+                                        "type": "string",
+                                        "example": "used",
+                                        "enum": [
+                                            "new",
+                                            "km0",
+                                            "used",
+                                            "renting",
+                                            "leasing",
+                                            "supcription"
+                                        ]
+                                    },
+                                    "ad_details": {
+                                        "type": "string",
+                                        "example": "Excelente estado, mantenimiento al día"
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 23990
+                                    },
+                                    "kilometers": {
+                                        "type": "integer",
+                                        "example": 45000
+                                    },
+                                    "car_color": {
+                                        "type": "string",
+                                        "example": "gris",
+                                        "enum": [
+                                            "blanco",
+                                            "negro",
+                                            "gris",
+                                            "plata",
+                                            "rojo",
+                                            "azul",
+                                            "verde",
+                                            "amarillo",
+                                            "naranja",
+                                            "otro"
+                                        ]
+                                    },
+                                    "year_manufacture": {
+                                        "type": "integer",
+                                        "example": 2020
+                                    },
+                                    "region": {
+                                        "type": "string",
+                                        "example": "Madrid"
+                                    },
+                                    "city": {
+                                        "type": "string",
+                                        "example": "Alcobendas"
+                                    },
+                                    "visible": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "model_id": {
+                                        "type": "integer",
+                                        "example": 12
+                                    },
+                                    "engine_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
-                    "201": {
-                        "description": "Post creado"
+                    "200": {
+                        "description": "Anuncio actualizado exitosamente"
+                    },
+                    "403": {
+                        "description": "Sin permiso para editar este anuncio"
+                    },
+                    "404": {
+                        "description": "Anuncio no encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Anuncios"
+                ],
+                "summary": "Eliminar un anuncio definitivamente",
+                "operationId": "bfc01114c7563009f2ab2bba167186d3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Anuncio y sus relaciones eliminados exitosamente"
+                    },
+                    "403": {
+                        "description": "Solo los administradores pueden eliminar anuncios"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Anuncios"
+                ],
+                "summary": "Actualizar parcialmente un anuncio",
+                "operationId": "41ab5226bc468cae2a5dfeb51e917b42",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 21500
+                                    },
+                                    "visible": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "ad_details": {
+                                        "type": "string",
+                                        "example": "Precio negociable"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Anuncio actualizado exitosamente"
+                    },
+                    "403": {
+                        "description": "Sin permiso para editar este anuncio"
                     }
                 },
                 "security": [
@@ -363,16 +1038,113 @@
                 ]
             }
         },
-        "/api/posts/{id}": {
+        "/api/market/{id}/soft-delete": {
+            "patch": {
+                "tags": [
+                    "Anuncios"
+                ],
+                "summary": "Solicitar eliminación de un anuncio",
+                "operationId": "21a47525431590ebc0c4a51348427c61",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Eliminación del anuncio solicitada exitosamente"
+                    },
+                    "403": {
+                        "description": "Sin permiso"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/social": {
             "get": {
                 "tags": [
                     "Posts"
                 ],
-                "summary": "Obtener detalles de un post",
-                "operationId": "142b5adb0520cca80cedfe09d9298332",
+                "summary": "Listar posts de la comunidad",
+                "operationId": "2d419283c5c12cd9a186bc83c10c87fb",
+                "parameters": [
+                    {
+                        "name": "mine",
+                        "in": "query",
+                        "description": "Filtrar solo posts del usuario autenticado",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "following",
+                        "in": "query",
+                        "description": "Filtrar solo posts de usuarios seguidos",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Detalles del post"
+                        "description": "Listado paginado de posts"
+                    }
+                }
+            }
+        },
+        "/api/social/{id}": {
+            "get": {
+                "tags": [
+                    "Posts"
+                ],
+                "summary": "Obtener detalle de un post",
+                "operationId": "c1383a8f3670fb07f979e062ebd77585",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalle del post con comentarios, likes y multimedia",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        },
+                                        "likes_count": {
+                                            "type": "integer"
+                                        },
+                                        "is_liked": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Post no encontrado"
                     }
                 }
             },
@@ -381,10 +1153,54 @@
                     "Posts"
                 ],
                 "summary": "Actualizar un post",
-                "operationId": "650f4bed0846d9350903d8a17c7b503a",
+                "operationId": "c06e63e2470a41c9e15606b9e5981899",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Título del post"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Contenido del post"
+                                    },
+                                    "model_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "engine_id": {
+                                        "type": "integer",
+                                        "example": 3
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Post actualizado"
+                        "description": "Post actualizado exitosamente"
+                    },
+                    "403": {
+                        "description": "Sin permiso para editar este post"
+                    },
+                    "404": {
+                        "description": "Post no encontrado"
                     }
                 },
                 "security": [
@@ -397,11 +1213,73 @@
                 "tags": [
                     "Posts"
                 ],
-                "summary": "Eliminar un post",
-                "operationId": "9d99f2e42af2f722a058a86245aa856f",
+                "summary": "Eliminar un post definitivamente",
+                "operationId": "1432c76656d5ace417f6b31e2027617c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Post eliminado"
+                        "description": "Post y todas sus relaciones eliminados exitosamente"
+                    },
+                    "403": {
+                        "description": "Solo los administradores pueden eliminar posts"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Posts"
+                ],
+                "summary": "Actualizar parcialmente un post",
+                "operationId": "be96a9d1ebd7a219d91e4608159beb92",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Nuevo título"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Contenido actualizado"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Post actualizado exitosamente"
+                    },
+                    "403": {
+                        "description": "Sin permiso para editar este post"
                     }
                 },
                 "security": [
@@ -411,16 +1289,41 @@
                 ]
             }
         },
-        "/api/posts/{id}/like": {
+        "/api/social/{id}/like": {
             "post": {
                 "tags": [
                     "Posts"
                 ],
-                "summary": "Dar like a un post",
-                "operationId": "7f75130b52b638869a4fb55c3f348998",
+                "summary": "Dar o quitar like a un post",
+                "operationId": "ec3a2e7b80c174443b483eaab9664cbf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Like añadido"
+                        "description": "Estado del like actualizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "liked": {
+                                            "type": "boolean"
+                                        },
+                                        "likes_count": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -428,16 +1331,95 @@
                         "sanctum": []
                     }
                 ]
-            },
-            "delete": {
+            }
+        },
+        "/api/social/{id}/comment": {
+            "post": {
                 "tags": [
                     "Posts"
                 ],
-                "summary": "Quitar like de un post",
-                "operationId": "fd2423920058da1899b2fdf641842242",
+                "summary": "Añadir un comentario a un post",
+                "operationId": "1673f86e55a01f44ae830cf4cafa3a8f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "comment_text"
+                                ],
+                                "properties": {
+                                    "comment_text": {
+                                        "type": "string",
+                                        "example": "Gran coche!",
+                                        "maxLength": 1000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Comentario añadido",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "comment": {
+                                            "type": "object"
+                                        },
+                                        "comments_count": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/social/{id}/soft-delete": {
+            "patch": {
+                "tags": [
+                    "Posts"
+                ],
+                "summary": "Solicitar eliminación de un post",
+                "operationId": "84389f50ec7a88b13e96de1fbf14599a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Like eliminado"
+                        "description": "Eliminación del post solicitada exitosamente"
+                    },
+                    "403": {
+                        "description": "Sin permiso para solicitar la eliminación"
                     }
                 },
                 "security": [
@@ -529,6 +1511,10 @@
     },
     "tags": [
         {
+            "name": "Usuarios",
+            "description": "Usuarios"
+        },
+        {
             "name": "Autenticación",
             "description": "Autenticación"
         },
@@ -537,12 +1523,8 @@
             "description": "Eventos"
         },
         {
-            "name": "Marcas",
-            "description": "Marcas"
-        },
-        {
-            "name": "Paddocks",
-            "description": "Paddocks"
+            "name": "Anuncios",
+            "description": "Anuncios"
         },
         {
             "name": "Posts",

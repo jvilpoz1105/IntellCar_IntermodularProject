@@ -9,6 +9,7 @@ use App\Http\Resources\Api\UnivPostResource;
 use App\Http\Resources\Api\UnivPostSummaryResource;
 use App\Traits\ModeratesContent;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UnivControl extends Controller
 {
@@ -30,6 +31,12 @@ class UnivControl extends Controller
         $queries = $filter->newTransform($request);
 
         $query = Post::query()
+     * Obtener listado general (solo datos más importantes).
+     * Acepta query param ?mine=1 para filtrar solo posts del usuario autenticado.
+     */
+    public function index(Request $request)
+    {
+        $query = Post::with(['author:user_id,user_name,profile_picture', 'media', 'model.make'])
             ->where('visible', true)
             ->whereNull('onDeleteRequest');
 
@@ -89,6 +96,18 @@ class UnivControl extends Controller
             ->with(['author:user_id,username,profile_picture', 'media', 'model.make'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
+            ->whereNull('onDeleteRequest');
+
+        if ($request->boolean('mine') && $request->user('sanctum')) {
+            $userId = $request->user('sanctum')->user_id;
+            $query->where('author_id', $userId);
+        } elseif ($request->boolean('following') && $request->user('sanctum')) {
+            $userId = $request->user('sanctum')->user_id;
+            $followedIds = DB::table('user_follow')->where('follower_id', $userId)->pluck('followed_id');
+            $query->whereIn('author_id', $followedIds);
+        }
+
+        $posts = $query->orderBy('created_at', 'desc')->paginate(20);
 
         return UnivPostSummaryResource::collection($posts);
     }
@@ -96,64 +115,88 @@ class UnivControl extends Controller
     /**
      * Obtener por ID (todos los datos y relaciones).
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        // Traemos todas las relaciones, incluyendo motor, likes y usuarios de cada comentario
-        $post = Post::with(['author', 'model.make', 'engine', 'media', 'moods', 'likes', 'comments.user'])
+        // No cargamos 'likes' via Eloquent porque la relación tiene withPivot('created_at')
+        // y la tabla post_like no tiene esa columna. Usamos DB::table directamente.
+        $post = Post::with(['author', 'model.make', 'engine', 'media', 'moods', 'comments.user'])
             ->findOrFail($id);
-        
-        return new UnivPostResource($post);
+
+        $userId = $request->user('sanctum')?->user_id;
+        $postId = $post->post_id;
+
+        $data = (new UnivPostResource($post))->toArray($request);
+
+        $data['likes_count'] = DB::table('post_like')->where('post_id', $postId)->count();
+        $data['is_liked']    = $userId
+            ? DB::table('post_like')->where('post_id', $postId)->where('user_id', $userId)->exists()
+            : false;
+
+        if (isset($data['author'])) {
+            $data['author']['is_following'] = $userId
+                ? DB::table('user_follow')
+                    ->where('follower_id', $userId)
+                    ->where('followed_id', $post->author_id)
+                    ->exists()
+                : false;
+        }
+
+        return response()->json(['data' => $data]);
     }
 
     /**
-     * Crear un nuevo post.
+     * Toggle like en un post (requiere autenticación).
+     * Usa DB::table para evitar el withPivot('created_at') del modelo.
      */
-    public function store(Request $request)
+    public function toggleLike(Request $request, $id)
     {
-        $user = $request->user();
+        $post   = Post::findOrFail($id);
+        $userId = $request->user()->user_id;
+        $postId = $post->post_id;
 
-        $validated = $request->validate([
-            'title'     => 'nullable|string|max:150',
-            'content'   => 'required|string',
-            'model_id'  => 'nullable|exists:car_model,model_id',
-            'engine_id' => 'nullable|exists:car_engine,engine_id',
-            'ai_metadata' => 'nullable|array',
-            'media'     => 'nullable|array',
-            'media.*'   => 'string'
-        ]);
+        $exists = DB::table('post_like')
+            ->where('post_id', $postId)
+            ->where('user_id', $userId)
+            ->exists();
 
-        // --- COMPROBACIÓN EXTRA DE SEGURIDAD (Moderación) ---
-        if (!empty($validated['media'])) {
-            if (!$this->validateModeration($validated['media'])) {
-                return response()->json([
-                    'message' => 'Una o más imágenes contienen contenido inapropiado y no pueden ser publicadas.'
-                ], 422);
-            }
-        }
-
-        $post = Post::create([
-            'title'     => $validated['title'] ?? null,
-            'content'   => $validated['content'],
-            'model_id'  => $validated['model_id'] ?? null,
-            'engine_id' => $validated['engine_id'] ?? null,
-            'author_id' => $user->user_id,
-            'visible'   => true,
-            'ai_metadata' => $validated['ai_metadata'] ?? null,
-        ]);
-
-        // Guardar las referencias de multimedia (ya subidas a S3 desde el front)
-        if ($request->has('media')) {
-            foreach ($request->input('media') as $mediaUrl) {
-                $post->media()->create([
-                    'media_url'  => $mediaUrl,
-                    'media_type' => 'image'
-                ]);
-            }
+        if ($exists) {
+            DB::table('post_like')
+                ->where('post_id', $postId)
+                ->where('user_id', $userId)
+                ->delete();
+            $liked = false;
+        } else {
+            DB::table('post_like')->insert(['post_id' => $postId, 'user_id' => $userId]);
+            $liked = true;
         }
 
         return response()->json([
-            'message' => 'Post creado exitosamente',
-            'post'    => $post->load(['author', 'model.make', 'media']),
+            'liked'       => $liked,
+            'likes_count' => DB::table('post_like')->where('post_id', $postId)->count(),
+        ]);
+    }
+
+    /**
+     * Añadir comentario a un post (requiere autenticación).
+     */
+    public function storeComment(Request $request, $id)
+    {
+        $post = Post::findOrFail($id);
+
+        $validated = $request->validate([
+            'comment_text' => 'required|string|max:1000',
+        ]);
+
+        $comment = $post->comments()->create([
+            'user_id'      => $request->user()->user_id,
+            'comment_text' => $validated['comment_text'],
+        ]);
+
+        $comment->load('user:user_id,user_name');
+
+        return response()->json([
+            'comment'        => $comment,
+            'comments_count' => $post->comments()->count(),
         ], 201);
     }
 

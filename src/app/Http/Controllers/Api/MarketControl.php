@@ -9,6 +9,7 @@ use App\Http\Resources\Api\MarketAdvertResource;
 use App\Http\Resources\Api\MarketAdvertSummaryResource;
 use App\Traits\ModeratesContent;
 use Illuminate\Http\Request;
+use OpenApi\Annotations as OA;
 
 class MarketControl extends Controller
 {
@@ -97,13 +98,20 @@ class MarketControl extends Controller
     }
 
     /**
-     * Obtener por ID (todos los datos y relaciones).
+     * @OA\Get(
+     *     path="/api/market/{id}",
+     *     summary="Obtener detalle de un anuncio",
+     *     tags={"Anuncios"},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Detalle del anuncio"),
+     *     @OA\Response(response=404, description="Anuncio no encontrado")
+     * )
      */
     public function show($id)
     {
         // Aquí sí traemos absolutamente todos los datos relacionados:
         // multimedia, características del motor, vendedor, estados (moods), etc.
-        $advert = CarAdvert::with(['model.make', 'engine', 'seller', 'media', 'moods'])->findOrFail($id);
+        $advert = CarAdvert::with(['model.make', 'engine.specs', 'seller', 'media', 'moods'])->findOrFail($id);
         
         return new MarketAdvertResource($advert);
     }
@@ -228,7 +236,15 @@ class MarketControl extends Controller
     }
 
     /**
-     * Solicitar eliminación de un anuncio (Soft Delete).
+     * @OA\Patch(
+     *     path="/api/market/{id}/soft-delete",
+     *     summary="Solicitar eliminación de un anuncio",
+     *     tags={"Anuncios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Eliminación del anuncio solicitada exitosamente"),
+     *     @OA\Response(response=403, description="Sin permiso")
+     * )
      */
     public function softDelete(Request $request, $id)
     {
@@ -247,7 +263,15 @@ class MarketControl extends Controller
     }
 
     /**
-     * Eliminar un anuncio por ID.
+     * @OA\Delete(
+     *     path="/api/market/{id}",
+     *     summary="Eliminar un anuncio definitivamente",
+     *     tags={"Anuncios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Anuncio y sus relaciones eliminados exitosamente"),
+     *     @OA\Response(response=403, description="Solo los administradores pueden eliminar anuncios")
+     * )
      */
     public function destroy(Request $request, $id)
     {

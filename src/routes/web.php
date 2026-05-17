@@ -35,5 +35,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/adverts/{advert}',                 [AdminController::class, 'advertsShow'])->name('adverts.show');
         Route::patch('/adverts/{advert}/toggle-visible',[AdminController::class, 'advertsToggleVisible'])->name('adverts.toggle-visible');
         Route::delete('/adverts/{advert}',              [AdminController::class, 'advertsDestroy'])->name('adverts.destroy');
+
+        // Eventos
+        Route::get('/events',                           [AdminController::class, 'eventsIndex'])->name('events.index');
+        Route::get('/events/{event}',                   [AdminController::class, 'eventsShow'])->name('events.show');
+        Route::patch('/events/{event}/toggle-visible',  [AdminController::class, 'eventsToggleVisible'])->name('events.toggle-visible');
+        Route::delete('/events/{event}',                [AdminController::class, 'eventsDestroy'])->name('events.destroy');
+
+        // Posts
+        Route::get('/posts',                            [AdminController::class, 'postsIndex'])->name('posts.index');
+        Route::get('/posts/{post}',                     [AdminController::class, 'postsShow'])->name('posts.show');
+        Route::patch('/posts/{post}/toggle-visible',    [AdminController::class, 'postsToggleVisible'])->name('posts.toggle-visible');
+        Route::delete('/posts/{post}',                  [AdminController::class, 'postsDestroy'])->name('posts.destroy');
     });
 });

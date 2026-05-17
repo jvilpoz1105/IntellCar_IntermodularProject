@@ -165,6 +165,50 @@ class KddControl extends Controller
     }
 
     /**
+     * Unirse a un evento.
+     */
+    public function join(Request $request, $id)
+    {
+        $event = EventKdd::findOrFail($id);
+        $userId = $request->user()->user_id;
+
+        if ($event->attendees()->where('app_user.user_id', $userId)->exists()) {
+            return response()->json(['message' => 'Ya estás inscrito en este evento'], 409);
+        }
+
+        if ($event->max_participants > 0 && $event->attendees()->count() >= $event->max_participants) {
+            return response()->json(['message' => 'El evento ha alcanzado el límite de participantes'], 422);
+        }
+
+        $event->attendees()->attach($userId, ['joined_at' => now()]);
+
+        return response()->json([
+            'message' => 'Te has unido al evento correctamente',
+            'attendees_count' => $event->attendees()->count(),
+        ]);
+    }
+
+    /**
+     * Abandonar un evento.
+     */
+    public function leave(Request $request, $id)
+    {
+        $event = EventKdd::findOrFail($id);
+        $userId = $request->user()->user_id;
+
+        if (!$event->attendees()->where('app_user.user_id', $userId)->exists()) {
+            return response()->json(['message' => 'No estás inscrito en este evento'], 404);
+        }
+
+        $event->attendees()->detach($userId);
+
+        return response()->json([
+            'message' => 'Has abandonado el evento',
+            'attendees_count' => $event->attendees()->count(),
+        ]);
+    }
+
+    /**
      * Eliminar un evento/quedada por ID.
      */
     public function destroy(Request $request, $id)

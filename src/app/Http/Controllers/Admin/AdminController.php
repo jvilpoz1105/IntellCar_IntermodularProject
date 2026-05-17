@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AppUser;
 use App\Models\CarAdvert;
+use App\Models\EventKdd;
+use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -66,18 +68,24 @@ class AdminController extends Controller
     public function dashboard()
     {
         $stats = [
-            'total_users'         => AppUser::count(),
-            'active_users'        => AppUser::where('is_active', true)->count(),
-            'pending_delete_users'=> AppUser::whereNotNull('onDeleteRequest')->count(),
-            'total_adverts'       => CarAdvert::count(),
-            'visible_adverts'     => CarAdvert::where('visible', true)->count(),
-            'pending_delete_ads'  => CarAdvert::whereNotNull('onDeleteRequest')->count(),
+            'total_users'          => AppUser::count(),
+            'active_users'         => AppUser::where('is_active', true)->count(),
+            'pending_delete_users' => AppUser::whereNotNull('onDeleteRequest')->count(),
+            'total_adverts'        => CarAdvert::count(),
+            'visible_adverts'      => CarAdvert::where('visible', true)->count(),
+            'pending_delete_ads'   => CarAdvert::whereNotNull('onDeleteRequest')->count(),
+            'total_events'         => EventKdd::count(),
+            'visible_events'       => EventKdd::where('visible', true)->count(),
+            'total_posts'          => Post::count(),
+            'visible_posts'        => Post::where('visible', true)->count(),
         ];
 
         $latest_users   = AppUser::latest('created_at')->take(5)->get();
         $latest_adverts = CarAdvert::with('seller')->latest('publish_date')->take(5)->get();
+        $latest_events  = EventKdd::with('creator')->latest('created_at')->take(5)->get();
+        $latest_posts   = Post::with('author')->latest('created_at')->take(5)->get();
 
-        return view('admin.dashboard', compact('stats', 'latest_users', 'latest_adverts'));
+        return view('admin.dashboard', compact('stats', 'latest_users', 'latest_adverts', 'latest_events', 'latest_posts'));
     }
 
     // ─── Gestión de Usuarios ──────────────────────────────────────────────────
@@ -186,5 +194,101 @@ class AdminController extends Controller
 
         return redirect()->route('admin.adverts.index')
             ->with('success', 'Anuncio eliminado definitivamente.');
+    }
+
+    // ─── Gestión de Eventos ───────────────────────────────────────────────────
+
+    public function eventsIndex(Request $request)
+    {
+        $query = EventKdd::with('creator');
+
+        if ($search = $request->input('search')) {
+            $query->where('title', 'like', "%{$search}%")
+                  ->orWhere('city', 'like', "%{$search}%");
+        }
+
+        if ($request->input('pending_delete') === '1') {
+            $query->whereNotNull('onDeleteRequest');
+        }
+
+        if ($request->input('hidden') === '1') {
+            $query->where('visible', false);
+        }
+
+        $events = $query->latest('created_at')->paginate(20)->withQueryString();
+
+        return view('admin.events.index', compact('events'));
+    }
+
+    public function eventsShow(EventKdd $event)
+    {
+        $event->load('creator', 'attendees');
+
+        return view('admin.events.show', compact('event'));
+    }
+
+    public function eventsToggleVisible(EventKdd $event)
+    {
+        $event->update(['visible' => !$event->visible]);
+
+        $status = $event->visible ? 'visible' : 'oculto';
+
+        return back()->with('success', "Evento marcado como {$status}.");
+    }
+
+    public function eventsDestroy(EventKdd $event)
+    {
+        $event->delete();
+
+        return redirect()->route('admin.events.index')
+            ->with('success', 'Evento eliminado definitivamente.');
+    }
+
+    // ─── Gestión de Posts ─────────────────────────────────────────────────────
+
+    public function postsIndex(Request $request)
+    {
+        $query = Post::with('author');
+
+        if ($search = $request->input('search')) {
+            $query->where('title', 'like', "%{$search}%");
+        }
+
+        if ($request->input('pending_delete') === '1') {
+            $query->whereNotNull('onDeleteRequest');
+        }
+
+        if ($request->input('hidden') === '1') {
+            $query->where('visible', false);
+        }
+
+        $posts = $query->latest('created_at')->paginate(20)->withQueryString();
+
+        return view('admin.posts.index', compact('posts'));
+    }
+
+    public function postsShow(Post $post)
+    {
+        $post->load('author', 'media', 'model', 'engine');
+
+        return view('admin.posts.show', compact('post'));
+    }
+
+    public function postsToggleVisible(Post $post)
+    {
+        $post->update(['visible' => !$post->visible]);
+
+        $status = $post->visible ? 'visible' : 'oculto';
+
+        return back()->with('success', "Post marcado como {$status}.");
+    }
+
+    public function postsDestroy(Post $post)
+    {
+        $post->media()->delete();
+        $post->delete();
+
+        return redirect()->route('admin.posts.index')
+            ->with('success', 'Post eliminado definitivamente.');
     }
 }

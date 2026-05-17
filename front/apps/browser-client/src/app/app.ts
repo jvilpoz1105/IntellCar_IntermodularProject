@@ -2,12 +2,13 @@ import { Component, inject, ElementRef, OnInit } from '@angular/core';
 import { Router, RouterOutlet, NavigationStart, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import gsap from 'gsap';
+import { NgxSonnerToaster } from 'ngx-sonner';
 import { ToastContainerComponent } from './core/components/toast-container/toast-container.component';
 
 @Component({
 	selector: 'app-root',
 	standalone: true,
-	imports: [RouterOutlet, ToastContainerComponent],
+	imports: [RouterOutlet, NgxSonnerToaster, ToastContainerComponent],
 	templateUrl: './app.html',
 	styleUrl: './app.css',
 })

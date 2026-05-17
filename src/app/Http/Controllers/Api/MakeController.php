@@ -7,18 +7,8 @@ use App\Models\Make;
 use App\Models\CarModel;
 use App\Models\CarEngine;
 use Illuminate\Http\Request;
-use OpenApi\Annotations as OA;
-
 class MakeController extends Controller
 {
-    /**
-     * @OA\Get(
-     *     path="/api/makes",
-     *     summary="Obtener listado de marcas de coches",
-     *     tags={"Marcas"},
-     *     @OA\Response(response=200, description="Listado de marcas")
-     * )
-     */
     public function index()
     {
         $makes = Make::orderBy('make_name')->get(['make_id', 'make_name', 'origin_country', 'status']);
@@ -26,14 +16,6 @@ class MakeController extends Controller
         return response()->json($makes);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/makes/{id}",
-     *     summary="Obtener detalles de una marca",
-     *     tags={"Marcas"},
-     *     @OA\Response(response=200, description="Detalles de la marca")
-     * )
-     */
     public function show($id)
     {
         $make = Make::with(['models', 'engines'])->findOrFail($id);

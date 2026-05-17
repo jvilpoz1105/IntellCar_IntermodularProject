@@ -98,11 +98,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/market/{id}', [MarketControl::class, 'update']);
     Route::patch('/market/{id}', [MarketControl::class, 'update']);
     
+    Route::post('/social/{id}/like', [UnivControl::class, 'toggleLike']);
+    Route::post('/social/{id}/comment', [UnivControl::class, 'storeComment']);
+    Route::post('/users/{id}/follow', [AppUserController::class, 'toggleFollow']);
+
     Route::put('/social/{id}', [UnivControl::class, 'update']);
     Route::patch('/social/{id}', [UnivControl::class, 'update']);
     
     Route::put('/kdds/{id}', [KddControl::class, 'update']);
     Route::patch('/kdds/{id}', [KddControl::class, 'update']);
+    Route::post('/kdds/{id}/join', [KddControl::class, 'join']);
+    Route::delete('/kdds/{id}/join', [KddControl::class, 'leave']);
 
     // --- SOFT DELETES (Solicitud de borrado por el usuario) ---
     Route::patch('/market/{id}/soft-delete', [MarketControl::class, 'softDelete']);
