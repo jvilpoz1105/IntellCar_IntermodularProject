@@ -11,7 +11,7 @@ env:
 
 jobs:
   # ─────────────────────────────────────────────────────
-  # JOB 1: Build de Angular y subida al Bucket S3 (AWS)  - 
+  # JOB 1: Build de Angular y subida al Bucket S3 (AWS) 🚗  - 
   # ─────────────────────────────────────────────────────- 
   # ─────────────────────────────────────────────────────
   deploy-frontend:
