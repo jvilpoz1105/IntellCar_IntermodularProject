@@ -125,7 +125,12 @@ return [
              *
              * @see \OpenApi\scan
              */
-            'analyser' => null,
+            'analyser' => (isset($_SERVER['argv']) && (in_array('config:cache', $_SERVER['argv']) || in_array('optimize', $_SERVER['argv'])))
+                ? null
+                : new \OpenApi\Analysers\ReflectionAnalyser([
+                    new \OpenApi\Analysers\AttributeAnnotationFactory(),
+                    new \OpenApi\Analysers\DocBlockAnnotationFactory(),
+                ]),
 
             /**
              * analysis: defaults to a new \OpenApi\Analysis .
