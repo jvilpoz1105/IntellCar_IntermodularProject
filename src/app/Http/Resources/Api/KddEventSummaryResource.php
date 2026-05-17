@@ -14,6 +14,8 @@ class KddEventSummaryResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $userId = $request->user('sanctum')?->user_id;
+
         return [
             'event_id' => $this->event_id ?? $this->id,
             'title' => $this->title,
@@ -28,6 +30,8 @@ class KddEventSummaryResource extends JsonResource
                 ];
             }),
             'max_participants' => $this->max_participants,
+            'attendees_count' => $this->whenLoaded('attendees', fn() => $this->attendees->count(), fn() => $this->attendees()->count()),
+            'is_attending' => $userId ? $this->whenLoaded('attendees', fn() => $this->attendees->contains('user_id', $userId), fn() => $this->attendees()->where('app_user.user_id', $userId)->exists()) : false,
             'created_at' => $this->created_at,
         ];
     }

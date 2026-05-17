@@ -7,39 +7,103 @@ use App\Models\CarAdvert;
 use App\Http\Resources\Api\MarketAdvertResource;
 use App\Http\Resources\Api\MarketAdvertSummaryResource;
 use Illuminate\Http\Request;
+use OpenApi\Annotations as OA;
 
 class MarketControl extends Controller
 {
     /**
-     * Obtener listado general (solo datos más importantes).
+     * @OA\Get(
+     *     path="/api/market",
+     *     summary="Listar anuncios de coches",
+     *     tags={"Anuncios"},
+     *     @OA\Parameter(name="visible", in="query", required=false, @OA\Schema(type="boolean")),
+     *     @OA\Parameter(name="ad_type", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Listado de anuncios")
+     * )
      */
-    public function index()
+    public function index(Request $request)
     {
         // Para el listado general traemos solo las relaciones básicas (modelo, fotos).
         // Evitamos sobrecargar con motor, detalles complejos o todos los estados de ánimo (moods).
-        $adverts = CarAdvert::with(['model.make', 'media'])
-            ->where('visible', true)
-            ->whereNull('onDeleteRequest')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $query = CarAdvert::with(['model.make', 'media'])
+            ->whereNull('onDeleteRequest');
+
+        if ($request->boolean('visible', true)) {
+            $query->where('visible', true);
+        }
+
+        if ($request->filled('ad_type')) {
+            $query->where('ad_type', $request->input('ad_type'));
+        }
+
+        $adverts = $query->orderBy('created_at', 'desc')->paginate(20);
 
         return MarketAdvertSummaryResource::collection($adverts);
     }
 
     /**
-     * Obtener por ID (todos los datos y relaciones).
+     * @OA\Get(
+     *     path="/api/market/{id}",
+     *     summary="Obtener detalle de un anuncio",
+     *     tags={"Anuncios"},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Detalle del anuncio"),
+     *     @OA\Response(response=404, description="Anuncio no encontrado")
+     * )
      */
     public function show($id)
     {
         // Aquí sí traemos absolutamente todos los datos relacionados:
         // multimedia, características del motor, vendedor, estados (moods), etc.
-        $advert = CarAdvert::with(['model.make', 'engine', 'seller', 'media', 'moods'])->findOrFail($id);
+        $advert = CarAdvert::with(['model.make', 'engine.specs', 'seller', 'media', 'moods'])->findOrFail($id);
         
         return new MarketAdvertResource($advert);
     }
 
     /**
-     * Actualizar anuncio (PUT/PATCH - actualización parcial permitida).
+     * @OA\Put(
+     *     path="/api/market/{id}",
+     *     summary="Actualizar un anuncio",
+     *     tags={"Anuncios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="ad_title", type="string", example="BMW Serie 3 320d Automatico"),
+     *             @OA\Property(property="ad_type", type="string", enum={"new","km0","used","renting","leasing","supcription"}, example="used"),
+     *             @OA\Property(property="ad_details", type="string", example="Excelente estado, mantenimiento al día"),
+     *             @OA\Property(property="price", type="number", format="float", example=23990.00),
+     *             @OA\Property(property="kilometers", type="integer", example=45000),
+     *             @OA\Property(property="car_color", type="string", enum={"blanco","negro","gris","plata","rojo","azul","verde","amarillo","naranja","otro"}, example="gris"),
+     *             @OA\Property(property="year_manufacture", type="integer", example=2020),
+     *             @OA\Property(property="region", type="string", example="Madrid"),
+     *             @OA\Property(property="city", type="string", example="Alcobendas"),
+     *             @OA\Property(property="visible", type="boolean", example=true),
+     *             @OA\Property(property="model_id", type="integer", example=12),
+     *             @OA\Property(property="engine_id", type="integer", example=5)
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Anuncio actualizado exitosamente"),
+     *     @OA\Response(response=403, description="Sin permiso para editar este anuncio"),
+     *     @OA\Response(response=404, description="Anuncio no encontrado")
+     * )
+     * @OA\Patch(
+     *     path="/api/market/{id}",
+     *     summary="Actualizar parcialmente un anuncio",
+     *     tags={"Anuncios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="price", type="number", format="float", example=21500.00),
+     *             @OA\Property(property="visible", type="boolean", example=false),
+     *             @OA\Property(property="ad_details", type="string", example="Precio negociable")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Anuncio actualizado exitosamente"),
+     *     @OA\Response(response=403, description="Sin permiso para editar este anuncio")
+     * )
      */
     public function update(Request $request, $id)
     {
@@ -75,7 +139,15 @@ class MarketControl extends Controller
     }
 
     /**
-     * Solicitar eliminación de un anuncio (Soft Delete).
+     * @OA\Patch(
+     *     path="/api/market/{id}/soft-delete",
+     *     summary="Solicitar eliminación de un anuncio",
+     *     tags={"Anuncios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Eliminación del anuncio solicitada exitosamente"),
+     *     @OA\Response(response=403, description="Sin permiso")
+     * )
      */
     public function softDelete(Request $request, $id)
     {
@@ -94,7 +166,15 @@ class MarketControl extends Controller
     }
 
     /**
-     * Eliminar un anuncio por ID.
+     * @OA\Delete(
+     *     path="/api/market/{id}",
+     *     summary="Eliminar un anuncio definitivamente",
+     *     tags={"Anuncios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Anuncio y sus relaciones eliminados exitosamente"),
+     *     @OA\Response(response=403, description="Solo los administradores pueden eliminar anuncios")
+     * )
      */
     public function destroy(Request $request, $id)
     {

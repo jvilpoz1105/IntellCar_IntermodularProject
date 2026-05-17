@@ -15,7 +15,7 @@ class MarketAdvertSummaryResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'advert_id' => $this->advert_id ?? $this->id,
+            'advert_id' => $this->ad_id,
             'ad_title' => $this->ad_title,
             'price' => $this->price,
             'kilometers' => $this->kilometers,

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Post;
 use Illuminate\Http\Request;
 use OpenApi\Annotations as OA;
 
@@ -11,159 +10,155 @@ class PostController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/api/posts",
-     *     summary="Obtener listado de posts",
+     *     path="/api/social",
+     *     summary="Listar posts de la comunidad",
      *     tags={"Posts"},
-     *     @OA\Response(response=200, description="Listado de posts")
+     *     @OA\Parameter(
+     *         name="mine",
+     *         in="query",
+     *         required=false,
+     *         description="Filtrar solo posts del usuario autenticado",
+     *         @OA\Schema(type="boolean")
+     *     ),
+     *     @OA\Parameter(
+     *         name="following",
+     *         in="query",
+     *         required=false,
+     *         description="Filtrar solo posts de usuarios seguidos",
+     *         @OA\Schema(type="boolean")
+     *     ),
+     *     @OA\Response(response=200, description="Listado paginado de posts")
      * )
      */
-    public function index()
-    {
-        $posts = Post::with(['author', 'model.make', 'engine', 'media', 'moods', 'likes', 'comments.user'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-
-        return response()->json($posts);
-    }
-
-    /**
-     * @OA\Post(
-     *     path="/api/posts",
-     *     summary="Crear un nuevo post",
-     *     tags={"Posts"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Response(response=201, description="Post creado")
-     * )
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => 'nullable|string|max:150',
-            'content' => 'required|string',
-            'model_id' => 'nullable|exists:car_model,model_id',
-            'engine_id' => 'nullable|exists:car_engine,engine_id',
-        ]);
-
-        $post = Post::create([
-            ...$validated,
-            'author_id' => $request->user()->user_id,
-        ]);
-
-        return response()->json([
-            'message' => 'Post creado exitosamente',
-            'post' => $post->load(['author', 'model', 'engine']),
-        ], 201);
-    }
+    public function index() {}
 
     /**
      * @OA\Get(
-     *     path="/api/posts/{id}",
-     *     summary="Obtener detalles de un post",
+     *     path="/api/social/{id}",
+     *     summary="Obtener detalle de un post",
      *     tags={"Posts"},
-     *     @OA\Response(response=200, description="Detalles del post")
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Detalle del post con comentarios, likes y multimedia",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="object"),
+     *             @OA\Property(property="likes_count", type="integer"),
+     *             @OA\Property(property="is_liked", type="boolean")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Post no encontrado")
      * )
      */
-    public function show($id)
-    {
-        $post = Post::with(['author', 'model.make', 'engine', 'media', 'moods', 'likes', 'comments.user'])
-            ->findOrFail($id);
-        
-        return response()->json($post);
-    }
-
-    /**
-     * @OA\Put(
-     *     path="/api/posts/{id}",
-     *     summary="Actualizar un post",
-     *     tags={"Posts"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Response(response=200, description="Post actualizado")
-     * )
-     */
-    public function update(Request $request, $id)
-    {
-        $post = Post::findOrFail($id);
-
-        if ($post->author_id !== $request->user()->user_id && $request->user()->user_tag !== 'admin') {
-            return response()->json(['message' => 'No tienes permiso para editar este post'], 403);
-        }
-
-        $validated = $request->validate([
-            'title' => 'nullable|string|max:150',
-            'content' => 'sometimes|string',
-            'model_id' => 'nullable|exists:car_model,model_id',
-            'engine_id' => 'nullable|exists:car_engine,engine_id',
-        ]);
-
-        $post->update($validated);
-
-        return response()->json([
-            'message' => 'Post actualizado exitosamente',
-            'post' => $post,
-        ]);
-    }
-
-    /**
-     * @OA\Delete(
-     *     path="/api/posts/{id}",
-     *     summary="Eliminar un post",
-     *     tags={"Posts"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Response(response=200, description="Post eliminado")
-     * )
-     */
-    public function destroy(Request $request, $id)
-    {
-        $post = Post::findOrFail($id);
-
-        if ($post->author_id !== $request->user()->user_id && $request->user()->user_tag !== 'admin') {
-            return response()->json(['message' => 'No tienes permiso para eliminar este post'], 403);
-        }
-
-        $post->delete();
-
-        return response()->json(['message' => 'Post eliminado exitosamente']);
-    }
+    public function show($id) {}
 
     /**
      * @OA\Post(
-     *     path="/api/posts/{id}/like",
-     *     summary="Dar like a un post",
+     *     path="/api/social/{id}/like",
+     *     summary="Dar o quitar like a un post",
      *     tags={"Posts"},
      *     security={{"sanctum":{}}},
-     *     @OA\Response(response=200, description="Like añadido")
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Estado del like actualizado",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="liked", type="boolean"),
+     *             @OA\Property(property="likes_count", type="integer")
+     *         )
+     *     )
      * )
      */
-    public function like(Request $request, $id)
-    {
-        $post = Post::findOrFail($id);
-        $user = $request->user();
+    public function toggleLike(Request $request, $id) {}
 
-        if ($post->likes()->where('user_id', $user->user_id)->exists()) {
-            return response()->json(['message' => 'Ya has dado like a este post'], 400);
-        }
+    /**
+     * @OA\Post(
+     *     path="/api/social/{id}/comment",
+     *     summary="Añadir un comentario a un post",
+     *     tags={"Posts"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"comment_text"},
+     *             @OA\Property(property="comment_text", type="string", maxLength=1000, example="Gran coche!")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Comentario añadido",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="comment", type="object"),
+     *             @OA\Property(property="comments_count", type="integer")
+     *         )
+     *     )
+     * )
+     */
+    public function storeComment(Request $request, $id) {}
 
-        $post->likes()->attach($user->user_id);
+    /**
+     * @OA\Put(
+     *     path="/api/social/{id}",
+     *     summary="Actualizar un post",
+     *     tags={"Posts"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="title", type="string", example="Título del post"),
+     *             @OA\Property(property="content", type="string", example="Contenido del post"),
+     *             @OA\Property(property="model_id", type="integer", example=5),
+     *             @OA\Property(property="engine_id", type="integer", example=3)
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Post actualizado exitosamente"),
+     *     @OA\Response(response=403, description="Sin permiso para editar este post"),
+     *     @OA\Response(response=404, description="Post no encontrado")
+     * )
+     * @OA\Patch(
+     *     path="/api/social/{id}",
+     *     summary="Actualizar parcialmente un post",
+     *     tags={"Posts"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="title", type="string", example="Nuevo título"),
+     *             @OA\Property(property="content", type="string", example="Contenido actualizado")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Post actualizado exitosamente"),
+     *     @OA\Response(response=403, description="Sin permiso para editar este post")
+     * )
+     */
+    public function update(Request $request, $id) {}
 
-        return response()->json(['message' => 'Like añadido exitosamente']);
-    }
+    /**
+     * @OA\Patch(
+     *     path="/api/social/{id}/soft-delete",
+     *     summary="Solicitar eliminación de un post",
+     *     tags={"Posts"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Eliminación del post solicitada exitosamente"),
+     *     @OA\Response(response=403, description="Sin permiso para solicitar la eliminación")
+     * )
+     */
+    public function softDelete(Request $request, $id) {}
 
     /**
      * @OA\Delete(
-     *     path="/api/posts/{id}/like",
-     *     summary="Quitar like de un post",
+     *     path="/api/social/{id}",
+     *     summary="Eliminar un post definitivamente",
      *     tags={"Posts"},
      *     security={{"sanctum":{}}},
-     *     @OA\Response(response=200, description="Like eliminado")
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Post y todas sus relaciones eliminados exitosamente"),
+     *     @OA\Response(response=403, description="Solo los administradores pueden eliminar posts")
      * )
      */
-    public function unlike(Request $request, $id)
-    {
-        $post = Post::findOrFail($id);
-        $user = $request->user();
-
-        $post->likes()->detach($user->user_id);
-
-        return response()->json(['message' => 'Like eliminado exitosamente']);
-    }
+    public function destroy(Request $request, $id) {}
 }
+
