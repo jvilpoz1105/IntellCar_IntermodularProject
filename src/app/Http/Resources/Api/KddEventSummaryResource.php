@@ -25,7 +25,7 @@ class KddEventSummaryResource extends JsonResource
             'creator' => $this->whenLoaded('creator', function() {
                 return [
                     'user_id' => $this->creator->user_id ?? $this->creator->id,
-                    'username' => $this->creator->username,
+                    'username' => $this->creator->user_name,
                     'profile_picture' => $this->creator->profile_picture,
                 ];
             }),

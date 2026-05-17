@@ -48,7 +48,7 @@ class KddControl extends Controller
         }
 
         $events = $query
-            ->with(['creator:user_id,username,profile_picture', 'paddock'])
+            ->with(['creator:user_id,user_name,profile_picture', 'paddock'])
             ->orderBy('event_date', 'asc')
             ->paginate(20);
 

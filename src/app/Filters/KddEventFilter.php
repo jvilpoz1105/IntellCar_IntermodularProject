@@ -35,7 +35,7 @@ class KddEventFilter extends ApiFilter
         'maxSlots'    => 'max_participants',
 
         // Relacionales: <relacion>.<columna>
-        'creator'  => 'creator.username',
+        'creator'  => 'creator.user_name',
         'paddock'  => 'paddock.name',
     ];
 

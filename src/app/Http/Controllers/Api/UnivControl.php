@@ -31,12 +31,6 @@ class UnivControl extends Controller
         $queries = $filter->newTransform($request);
 
         $query = Post::query()
-     * Obtener listado general (solo datos más importantes).
-     * Acepta query param ?mine=1 para filtrar solo posts del usuario autenticado.
-     */
-    public function index(Request $request)
-    {
-        $query = Post::with(['author:user_id,user_name,profile_picture', 'media', 'model.make'])
             ->where('visible', true)
             ->whereNull('onDeleteRequest');
 
@@ -92,12 +86,6 @@ class UnivControl extends Controller
             }
         }
 
-        $posts = $query
-            ->with(['author:user_id,username,profile_picture', 'media', 'model.make'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-            ->whereNull('onDeleteRequest');
-
         if ($request->boolean('mine') && $request->user('sanctum')) {
             $userId = $request->user('sanctum')->user_id;
             $query->where('author_id', $userId);
@@ -107,7 +95,10 @@ class UnivControl extends Controller
             $query->whereIn('author_id', $followedIds);
         }
 
-        $posts = $query->orderBy('created_at', 'desc')->paginate(20);
+        $posts = $query
+            ->with(['author:user_id,user_name,profile_picture', 'media', 'model.make'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
 
         return UnivPostSummaryResource::collection($posts);
     }

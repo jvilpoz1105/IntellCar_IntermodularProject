@@ -33,7 +33,7 @@ class PostFilter extends ApiFilter
         'content' => 'content',
 
         // Relacionales: <relacion>.<columna>
-        'author'  => 'author.username',
+        'author'  => 'author.user_name',
         'make'    => 'model.make.make_name',
         'model'   => 'model.model_name',
         'fuel'    => 'engine.fuel_type',
