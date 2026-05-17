@@ -160,12 +160,15 @@ jobs:
             docker exec intellcar_api chown -R www-data:www-data /var/www/html
             docker exec intellcar_api chmod -R 775 storage bootstrap/cache
 
-            # ── 7. Ejecutar migraciones con SEED y cachear configuración ──
+            # ── 7. Ejecutar migraciones con SEED, generar swagger y cachear configuración ──
             echo "Ejecutando migraciones y seeders..."
             docker exec intellcar_api php artisan migrate:fresh --seed --force > seed_output.log 2>&1 || (cat seed_output.log && exit 1)
             cat seed_output.log
+
+            echo "Generando documentación Swagger..."
+            docker exec intellcar_api php artisan l5-swagger:generate
             
-            docker exec intellcar_api php artisan config:cache || echo "Advertencia: No se pudo cachear la configuración (Swagger), continuando..."
+            docker exec intellcar_api php artisan config:cache
             docker exec intellcar_api php artisan route:cache
             docker exec intellcar_api php artisan view:cache
 
@@ -189,6 +192,39 @@ jobs:
                     proxy_set_header Connection 'upgrade';
                     proxy_set_header Host $host;
                     proxy_cache_bypass $http_upgrade;
+                    
+                    # Conservar IP real y protocolo original (HTTPS/HTTP)
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                }
+
+                # Proxy para el Panel de Administración (Blade / Session)
+                location /admin {
+                    proxy_pass http://localhost:8080;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host $host;
+                    proxy_cache_bypass $http_upgrade;
+
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                }
+
+                # Proxy para la ruta de la documentación Swagger (JSON/YAML)
+                location /docs {
+                    proxy_pass http://localhost:8080;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host $host;
+                    proxy_cache_bypass $http_upgrade;
+
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
                 }
             }
             EOF
