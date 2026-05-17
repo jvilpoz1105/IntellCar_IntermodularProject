@@ -1,4 +1,4 @@
-import { Component, inject, ElementRef, OnInit } from '@angular/core';
+import { Component, inject, ElementRef, OnInit, signal } from '@angular/core';
 import { Router, RouterOutlet, NavigationStart, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import gsap from 'gsap';
@@ -14,6 +14,11 @@ import { NgxSonnerToaster } from 'ngx-sonner';
 export class App implements OnInit {
 	private router = inject(Router);
 	private el = inject(ElementRef);
+
+	isPublishModalOpen = signal(false);
+	isSocialModalOpen  = signal(false);
+	isKddModalOpen     = signal(false);
+	isGarageModalOpen  = signal(false);
 
 	ngOnInit(): void {
 		this.router.events.pipe(
