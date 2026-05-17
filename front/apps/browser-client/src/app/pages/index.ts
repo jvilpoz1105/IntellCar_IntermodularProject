@@ -59,6 +59,12 @@ interface EventKdd {
   max_participants?: number;
 }
 
+interface Paddock {
+  paddock_id: number;
+  paddock_name: string;
+  paddock_description?: string;
+}
+
 interface ProfileDetail {
   user_id: number;
   user_name: string;
@@ -68,7 +74,9 @@ interface ProfileDetail {
   phone?: string;
   user_tag?: string;
   registration_date?: string;
+  paddock_id?: number | null;
   paddock?: {
+    paddock_id?: number;
     paddock_name?: string;
   };
   posts?: unknown[];
@@ -1105,7 +1113,12 @@ export class GarageComponent {}
             </div>
             <div>
               <label class="text-sm text-slate-400 block mb-1">Paddock</label>
-              <p class="font-semibold py-2 text-slate-400 text-sm">{{ profile.paddock?.paddock_name || 'Sin paddock' }}</p>
+              <div *ngIf="loadingPaddocks" class="text-xs text-slate-500 py-2">Cargando paddocks...</div>
+              <select *ngIf="!loadingPaddocks" [(ngModel)]="editForm.paddock_id" name="paddock_id"
+                class="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-600 text-slate-100 text-sm focus:outline-none focus:border-cyan-500">
+                <option [ngValue]="null">Sin paddock</option>
+                <option *ngFor="let p of paddocks" [ngValue]="p.paddock_id">{{ p.paddock_name }}</option>
+              </select>
             </div>
             <div class="md:col-span-2">
               <label class="text-sm text-slate-400 block mb-1">Dirección</label>
@@ -1158,15 +1171,19 @@ export class ProfileComponent implements OnInit {
   profile: ProfileDetail | null = null;
   isEditing = false;
   isSaving = false;
+  paddocks: Paddock[] = [];
+  loadingPaddocks = false;
   editForm = {
     user_name: '',
     contact_email: '',
     phone: '',
     address: '',
+    paddock_id: null as number | null,
   };
 
   ngOnInit(): void {
     this.loadProfile();
+    this.loadPaddocks();
   }
 
   reload(): void {
@@ -1180,6 +1197,7 @@ export class ProfileComponent implements OnInit {
       contact_email: this.profile.contact_email ?? '',
       phone: this.profile.phone ?? '',
       address: this.profile.address ?? '',
+      paddock_id: this.profile.paddock?.paddock_id ?? this.profile.paddock_id ?? null,
     };
     this.successMessage = '';
     this.errorMessage = '';
@@ -1197,11 +1215,12 @@ export class ProfileComponent implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    const payload: Record<string, string> = {};
+    const payload: Record<string, string | number | null> = {};
     if (this.editForm.user_name.trim()) payload['user_name'] = this.editForm.user_name.trim();
     if (this.editForm.contact_email.trim()) payload['contact_email'] = this.editForm.contact_email.trim();
     if (this.editForm.phone.trim()) payload['phone'] = this.editForm.phone.trim();
     if (this.editForm.address.trim()) payload['address'] = this.editForm.address.trim();
+    payload['paddock_id'] = this.editForm.paddock_id;
 
     this.http.patch(`${API_CONFIG.BASE_URL}/users/${this.profile.user_id}`, payload).subscribe({
       next: () => {
@@ -1228,6 +1247,19 @@ export class ProfileComponent implements OnInit {
     };
 
     return tag ? (labels[tag] || tag) : 'Sin definir';
+  }
+
+  private loadPaddocks(): void {
+    this.loadingPaddocks = true;
+    this.http.get<Paddock[]>(`${API_CONFIG.BASE_URL}/paddocks`).subscribe({
+      next: (data) => {
+        this.paddocks = data;
+        this.loadingPaddocks = false;
+      },
+      error: () => {
+        this.loadingPaddocks = false;
+      },
+    });
   }
 
   private loadProfile(): void {

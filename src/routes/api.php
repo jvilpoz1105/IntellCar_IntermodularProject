@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\MarketControl;
 use App\Http\Controllers\Api\UnivControl;
 use App\Http\Controllers\Api\KddControl;
 use App\Http\Controllers\Api\ProfileControl;
+use App\Http\Controllers\Api\PaddockController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,9 @@ Route::get('/social/{id}', [UnivControl::class, 'show']);
 // Eventos (Kdds)
 Route::get('/kdds', [KddControl::class, 'index']);
 Route::get('/kdds/{id}', [KddControl::class, 'show']);
+
+// Paddocks (comunidades)
+Route::get('/paddocks', [PaddockController::class, 'index']);
 
 
 // --- RUTAS PROTEGIDAS (Requieren Token) ---
