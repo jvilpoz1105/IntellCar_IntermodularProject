@@ -9,6 +9,152 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/users": {
+            "get": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Listar todos los usuarios",
+                "operationId": "ff17b36137eb782b19c28011098717a1",
+                "responses": {
+                    "200": {
+                        "description": "Listado de usuarios"
+                    },
+                    "403": {
+                        "description": "Acceso denegado (solo admin)"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/users/{id}": {
+            "get": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Obtener perfil de un usuario",
+                "operationId": "8e902077d77bb2f06b9a6b1ddc24113d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Datos del usuario"
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Actualizar datos de un usuario",
+                "operationId": "056a4049208d7aa5c35062df8a0c0d2c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuario actualizado correctamente"
+                    },
+                    "403": {
+                        "description": "Sin permiso para editar este perfil"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Eliminar un usuario",
+                "operationId": "d2ea6c493b69c5477cbbf751af455e70",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuario eliminado correctamente"
+                    },
+                    "403": {
+                        "description": "Solo los administradores pueden eliminar usuarios"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/users/{id}/follow": {
+            "post": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Seguir o dejar de seguir a un usuario",
+                "operationId": "3305a53e246b008f9425b0eb8f368527",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Estado del seguimiento actualizado"
+                    },
+                    "422": {
+                        "description": "No puedes seguirte a ti mismo"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/auth/register": {
             "post": {
                 "tags": [
@@ -276,60 +422,155 @@
                 ]
             }
         },
-        "/api/makes": {
+        "/api/market": {
             "get": {
                 "tags": [
-                    "Marcas"
+                    "Anuncios"
                 ],
-                "summary": "Obtener listado de marcas de coches",
-                "operationId": "7c4df47d577a536121941f589aff0ad8",
+                "summary": "Listar anuncios de coches",
+                "operationId": "ff0df5e82e0424dbe999c42d21b385d6",
+                "parameters": [
+                    {
+                        "name": "visible",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "ad_type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Listado de marcas"
+                        "description": "Listado de anuncios"
                     }
                 }
             }
         },
-        "/api/makes/{id}": {
+        "/api/market/{id}": {
             "get": {
                 "tags": [
-                    "Marcas"
+                    "Anuncios"
                 ],
-                "summary": "Obtener detalles de una marca",
-                "operationId": "960d6cb4aabb7dd4fffeec01fb6c2d57",
+                "summary": "Obtener detalle de un anuncio",
+                "operationId": "881e69fae1f38f0a20901aaac23777dd",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Detalles de la marca"
+                        "description": "Detalle del anuncio"
+                    },
+                    "404": {
+                        "description": "Anuncio no encontrado"
                     }
                 }
+            },
+            "put": {
+                "tags": [
+                    "Anuncios"
+                ],
+                "summary": "Actualizar un anuncio",
+                "operationId": "e68bc392099c5d7c6bd634fc89426908",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Anuncio actualizado exitosamente"
+                    },
+                    "403": {
+                        "description": "Sin permiso para editar este anuncio"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Anuncios"
+                ],
+                "summary": "Eliminar un anuncio definitivamente",
+                "operationId": "bfc01114c7563009f2ab2bba167186d3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Anuncio y sus relaciones eliminados exitosamente"
+                    },
+                    "403": {
+                        "description": "Solo los administradores pueden eliminar anuncios"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
-        "/api/paddocks": {
-            "get": {
+        "/api/market/{id}/soft-delete": {
+            "patch": {
                 "tags": [
-                    "Paddocks"
+                    "Anuncios"
                 ],
-                "summary": "Obtener listado de paddocks/comunidades",
-                "operationId": "da1ce883ac31abbdf8ec70ee76d50f4d",
+                "summary": "Solicitar eliminación de un anuncio",
+                "operationId": "21a47525431590ebc0c4a51348427c61",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Listado de paddocks"
+                        "description": "Eliminación del anuncio solicitada exitosamente"
+                    },
+                    "403": {
+                        "description": "Sin permiso"
                     }
-                }
-            }
-        },
-        "/api/paddocks/{id}": {
-            "get": {
-                "tags": [
-                    "Paddocks"
-                ],
-                "summary": "Obtener detalles de un paddock",
-                "operationId": "ad0d70b239c3dafb114d48366af01c17",
-                "responses": {
-                    "200": {
-                        "description": "Detalles del paddock"
+                },
+                "security": [
+                    {
+                        "sanctum": []
                     }
-                }
+                ]
             }
         },
         "/api/posts": {
@@ -529,6 +770,10 @@
     },
     "tags": [
         {
+            "name": "Usuarios",
+            "description": "Usuarios"
+        },
+        {
             "name": "Autenticación",
             "description": "Autenticación"
         },
@@ -537,12 +782,8 @@
             "description": "Eventos"
         },
         {
-            "name": "Marcas",
-            "description": "Marcas"
-        },
-        {
-            "name": "Paddocks",
-            "description": "Paddocks"
+            "name": "Anuncios",
+            "description": "Anuncios"
         },
         {
             "name": "Posts",

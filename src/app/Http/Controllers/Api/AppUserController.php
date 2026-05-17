@@ -7,11 +7,19 @@ use App\Models\AppUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Gate;
+use OpenApi\Annotations as OA;
 
 class AppUserController extends Controller
 {
     /**
-     * Display a listing of the resource (Only Admin).
+     * @OA\Get(
+     *     path="/api/users",
+     *     summary="Listar todos los usuarios",
+     *     tags={"Usuarios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(response=200, description="Listado de usuarios"),
+     *     @OA\Response(response=403, description="Acceso denegado (solo admin)")
+     * )
      */
     public function index()
     {
@@ -28,7 +36,15 @@ class AppUserController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * @OA\Get(
+     *     path="/api/users/{id}",
+     *     summary="Obtener perfil de un usuario",
+     *     tags={"Usuarios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Datos del usuario"),
+     *     @OA\Response(response=404, description="Usuario no encontrado")
+     * )
      */
     public function show(string $id)
     {
@@ -37,7 +53,15 @@ class AppUserController extends Controller
     }
 
     /**
-     * Toggle follow/unfollow de un usuario (requiere autenticación).
+     * @OA\Post(
+     *     path="/api/users/{id}/follow",
+     *     summary="Seguir o dejar de seguir a un usuario",
+     *     tags={"Usuarios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Estado del seguimiento actualizado"),
+     *     @OA\Response(response=422, description="No puedes seguirte a ti mismo")
+     * )
      */
     public function toggleFollow(Request $request, string $id)
     {
@@ -63,7 +87,15 @@ class AppUserController extends Controller
     }
 
     /**
-     * Update the specified resource.
+     * @OA\Put(
+     *     path="/api/users/{id}",
+     *     summary="Actualizar datos de un usuario",
+     *     tags={"Usuarios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Usuario actualizado correctamente"),
+     *     @OA\Response(response=403, description="Sin permiso para editar este perfil")
+     * )
      */
     public function update(Request $request, string $id)
     {
@@ -96,7 +128,15 @@ class AppUserController extends Controller
     }
 
     /**
-     * Remove the specified resource (Only Admin).
+     * @OA\Delete(
+     *     path="/api/users/{id}",
+     *     summary="Eliminar un usuario",
+     *     tags={"Usuarios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Usuario eliminado correctamente"),
+     *     @OA\Response(response=403, description="Solo los administradores pueden eliminar usuarios")
+     * )
      */
     public function destroy(string $id)
     {

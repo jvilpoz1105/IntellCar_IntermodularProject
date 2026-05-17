@@ -7,11 +7,19 @@ use App\Models\CarAdvert;
 use App\Http\Resources\Api\MarketAdvertResource;
 use App\Http\Resources\Api\MarketAdvertSummaryResource;
 use Illuminate\Http\Request;
+use OpenApi\Annotations as OA;
 
 class MarketControl extends Controller
 {
     /**
-     * Obtener listado general (solo datos más importantes).
+     * @OA\Get(
+     *     path="/api/market",
+     *     summary="Listar anuncios de coches",
+     *     tags={"Anuncios"},
+     *     @OA\Parameter(name="visible", in="query", required=false, @OA\Schema(type="boolean")),
+     *     @OA\Parameter(name="ad_type", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Listado de anuncios")
+     * )
      */
     public function index(Request $request)
     {
@@ -34,7 +42,14 @@ class MarketControl extends Controller
     }
 
     /**
-     * Obtener por ID (todos los datos y relaciones).
+     * @OA\Get(
+     *     path="/api/market/{id}",
+     *     summary="Obtener detalle de un anuncio",
+     *     tags={"Anuncios"},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Detalle del anuncio"),
+     *     @OA\Response(response=404, description="Anuncio no encontrado")
+     * )
      */
     public function show($id)
     {
@@ -46,7 +61,15 @@ class MarketControl extends Controller
     }
 
     /**
-     * Actualizar anuncio (PUT/PATCH - actualización parcial permitida).
+     * @OA\Put(
+     *     path="/api/market/{id}",
+     *     summary="Actualizar un anuncio",
+     *     tags={"Anuncios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Anuncio actualizado exitosamente"),
+     *     @OA\Response(response=403, description="Sin permiso para editar este anuncio")
+     * )
      */
     public function update(Request $request, $id)
     {
@@ -82,7 +105,15 @@ class MarketControl extends Controller
     }
 
     /**
-     * Solicitar eliminación de un anuncio (Soft Delete).
+     * @OA\Patch(
+     *     path="/api/market/{id}/soft-delete",
+     *     summary="Solicitar eliminación de un anuncio",
+     *     tags={"Anuncios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Eliminación del anuncio solicitada exitosamente"),
+     *     @OA\Response(response=403, description="Sin permiso")
+     * )
      */
     public function softDelete(Request $request, $id)
     {
@@ -101,7 +132,15 @@ class MarketControl extends Controller
     }
 
     /**
-     * Eliminar un anuncio por ID.
+     * @OA\Delete(
+     *     path="/api/market/{id}",
+     *     summary="Eliminar un anuncio definitivamente",
+     *     tags={"Anuncios"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Anuncio y sus relaciones eliminados exitosamente"),
+     *     @OA\Response(response=403, description="Solo los administradores pueden eliminar anuncios")
+     * )
      */
     public function destroy(Request $request, $id)
     {
