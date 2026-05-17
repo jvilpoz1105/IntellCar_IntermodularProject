@@ -12,6 +12,10 @@ class EventKdd extends Model
     protected $table = 'event_kdd';
     protected $primaryKey = 'event_id';
 
+    protected $attributes = [
+        'visible' => true,
+    ];
+
     protected $fillable = [
         'creator_id',
         'paddock_id',

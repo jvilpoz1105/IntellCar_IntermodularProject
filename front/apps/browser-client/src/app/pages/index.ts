@@ -371,10 +371,11 @@ export class MarketplaceComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
-    let params = new HttpParams();
+    const parts: string[] = [];
     if (this.selectedType) {
-      params = params.set('type[eq]', this.selectedType);
+      parts.push(`type[eq]=${encodeURIComponent(this.selectedType)}`);
     }
+    const params = parts.length ? new HttpParams({ fromString: parts.join('&') }) : new HttpParams();
 
     this.http
       .get<PaginatedResponse<MarketplaceAdvert>>(`${API_CONFIG.BASE_URL}/market`, { params })
@@ -656,7 +657,7 @@ export class EventsComponent implements OnInit {
       <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <h2 class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">El Universo</h2>
         <div class="flex gap-2">
-          <button class="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition">
+          <button (click)="showSocialModal.set(true)" class="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition">
             + Crear post
           </button>
           <button (click)="reload()" class="px-3 py-2 rounded-lg border bg-slate-800/60 border-slate-700 text-slate-200 text-sm hover:bg-slate-700/60">
@@ -665,24 +666,23 @@ export class EventsComponent implements OnInit {
         </div>
       </div>
 
+      <!-- Modal Social -->
+      @if (showSocialModal()) {
+        <app-social-modal 
+          (close)="showSocialModal.set(false)"
+          (published)="onPublished()"
+        />
+      }
+
       <!-- Filtros -->
       <div class="mb-6 flex gap-2">
         <button
-            (click)="showSocialModal.set(true)"
           (click)="setFilter('all')"
           class="px-4 py-2 rounded-lg border text-sm font-semibold transition"
           [ngClass]="postFilter === 'all' ? 'bg-purple-500/20 border-purple-400 text-purple-200' : 'bg-slate-800/60 border-slate-700 text-slate-300'"
         >
           Todos los posts
         </button>
-
-          <!-- Modal Social -->
-          @if (showSocialModal()) {
-            <app-social-modal 
-              (close)="showSocialModal.set(false)"
-              (published)="onPublished()"
-            />
-          }
         <button
           (click)="setFilter('mine')"
           class="px-4 py-2 rounded-lg border text-sm font-semibold transition"

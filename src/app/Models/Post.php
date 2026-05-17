@@ -12,6 +12,10 @@ class Post extends Model
     protected $table = 'post';
     protected $primaryKey = 'post_id';
 
+    protected $attributes = [
+        'visible' => true,
+    ];
+
     protected $fillable = [
         'author_id',
         'title',
