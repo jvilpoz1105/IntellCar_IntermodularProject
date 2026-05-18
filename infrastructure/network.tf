@@ -15,7 +15,7 @@ resource "aws_subnet" "public_subnet" {
   tags = { Name = "intellcar-public-subnet-1a" }
 }
 
-# 2.1 Crear una Subred Pública secundaria (Requisito para Base de Datos)
+#  2.1 Crear una Subred Pública secundaria (Requisito para Base de Datos)
 resource "aws_subnet" "public_subnet_2" {
   vpc_id            = aws_vpc.intellcar_vpc.id
   cidr_block        = "10.0.2.0/24"
