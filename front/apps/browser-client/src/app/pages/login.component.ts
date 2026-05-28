@@ -87,8 +87,7 @@ import { AuthService } from '../core/services/auth.service';
           <div class="mt-8 pt-6 border-t border-slate-700">
             <p class="text-xs text-slate-400 text-center mb-3">Demo - Usuarios disponibles:</p>
             <div class="space-y-2 text-xs">
-              <p class="text-slate-400"><span class="text-green-400">admin@intellcar.com</span> / password123</p>
-              <p class="text-slate-400"><span class="text-green-400">carlos@ferrari.com</span> / password123</p>
+              <p class="text-slate-400"><span class="text-green-400">carlos@ferrari.com</span> / ferrari123</p>
               <p class="text-slate-400"><span class="text-green-400">maria.gonzalez@email.com</span> / password123</p>
             </div>
           </div>
