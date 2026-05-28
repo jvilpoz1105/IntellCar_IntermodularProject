@@ -2,6 +2,9 @@
 
 Este directorio contiene la arquitectura **IaC (Infrastructure as Code)** de IntellCar. Hemos diseñado una solución escalable, segura y totalmente automatizada en Amazon Web Services.
 
+![Infraestructure](/assets/esquema_aws.png)
+
+
 ## 🏗️ Componentes de la Arquitectura
 
 ### 1. Computación y Web Server (`compute.tf`)
@@ -21,6 +24,9 @@ Este directorio contiene la arquitectura **IaC (Infrastructure as Code)** de Int
 ### 4. Inteligencia Artificial (`lambdas.tf`)
 - **AWS Rekognition**: Cuando subes una foto (`.jpg`, `.png`) al bucket de media, se dispara automáticamente una **Función Lambda**.
 - **Proceso**: La Lambda analiza la imagen con Rekognition, extrae etiquetas (ej: "Car", "Luxury") y notifica a la API de Laravel mediante un token de seguridad interno para validar el contenido.
+
+![Rekognition & Lambda](/assets/esquema_reko_workflow.png)
+
 
 ---
 

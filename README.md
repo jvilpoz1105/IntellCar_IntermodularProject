@@ -102,11 +102,16 @@ El frontend de IntellCar está organizado como un **Monorepo** moderno utilizand
 - **`front/packages/`**: Librerías y configuraciones compartidas (TypeScript, ESLint, etc.).
 - **`infrastructure/`**: Ficheros de Terraform para el despliegue en AWS.
 
+![Front Monorepo](./assets/esquema_monorepo.png)
+
+
 ---
 
 ## ☁️ Infraestructura y Despliegue (AWS) | Infrastructure & Deployment
 
 El proyecto utiliza una arquitectura profesional automatizada. | The project uses a professional automated architecture.
+
+![Infraestructure](./assets/esquema_infra_aws.png)
 
 ### 🇪🇸 Resumen (Español)
 - **Servidor**: AWS EC2 (Ubuntu) con Docker y Nginx.
