@@ -65,8 +65,8 @@ interface EventKdd {
           <ng-container *ngIf="isOverview; else childView">
           <div class="p-8">
             <div class="mb-8 p-6 bg-gradient-to-br from-green-500/10 to-cyan-500/10 border border-green-500/30 rounded-xl">
-              <h2 class="text-xl font-bold text-slate-100 mb-2">Datos reales desde tu base de datos</h2>
-              <p class="text-slate-400">Este panel consume tu API Laravel en tiempo real.</p>
+              <h2 class="text-xl font-bold text-slate-100 mb-2">¡Bienvenido de nuevo, {{ currentUserName }}!</h2>
+              <p class="text-slate-400">Disfruta de tu experiencia en IntellCar.</p>
             </div>
 
             <div *ngIf="loading" class="mb-8">
