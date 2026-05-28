@@ -111,7 +111,7 @@ El frontend de IntellCar está organizado como un **Monorepo** moderno utilizand
 
 El proyecto utiliza una arquitectura profesional automatizada. | The project uses a professional automated architecture.
 
-![Infraestructure](./assets/esquema_infra_aws.png)
+![Infraestructure](./assets/esquema_aws.png)
 
 ### 🇪🇸 Resumen (Español)
 - **Servidor**: AWS EC2 (Ubuntu) con Docker y Nginx.
