@@ -1,4 +1,4 @@
-# IntellCar_IntermodularProject
+![Front Monorepo](./assets/portada.png)
 ## 🚗 What is IntellCar?
 
 IntellCar is much more than a car website; it is the ultimate meeting point for motor enthusiasts. It is a 360º platform where you can do everything from buying your next vehicle to sharing photos of your road trips or meeting up with people who share your same passion.
@@ -35,6 +35,8 @@ This is your private showcase within the app. It is the space where you show the
 
 # IntellCar_ProyectoIntermodular
 Proyecto Intermodular DAW 2025-2026 Juan Benítez y José M. Villanúa
+
+![Front Monorepo](./assets/ipe.png)
 
 🚗 ¿Qué es IntellCar?
 IntellCar es mucho más que una web de coches; es el punto de encuentro definitivo para los amantes del motor. Es una plataforma 360º donde puedes desde comprar tu próximo vehículo hasta compartir fotos de tus rutas o quedar con gente que siente la misma pasión que tú.
